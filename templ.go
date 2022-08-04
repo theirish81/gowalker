@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Render renders a template, using the provided map as scope. Will return the rendered template or an error
 func Render(template string, data map[string]interface{}) (string, error) {
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	for _, item := range items {
@@ -20,6 +21,7 @@ func Render(template string, data map[string]interface{}) (string, error) {
 	return template, nil
 }
 
+// convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
 	switch t := data.(type) {
 	case int:

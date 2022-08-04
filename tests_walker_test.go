@@ -29,13 +29,19 @@ func TestWalk(t *testing.T) {
 }
 
 func TestExtractIndex(t *testing.T) {
-	if partial, index := ExtractIndex("foo[0]"); partial != "foo" || index != 0 {
+	if partial, index, _ := ExtractIndex("foo[0]"); partial != "foo" || index != 0 {
 		t.Error("could not extract 1 digit index or partial")
 	}
-	if partial, index := ExtractIndex("foo[29]"); partial != "foo" || index != 29 {
+	if partial, index, _ := ExtractIndex("foo[29]"); partial != "foo" || index != 29 {
 		t.Error("could not extract 2 digits index or partial")
 	}
-	if partial, index := ExtractIndex("foo"); partial != "foo" || index != -1 {
+	if partial, index, _ := ExtractIndex("foo[]"); partial != "foo[]" || index != -1 {
+		t.Error("error parsing empty square brackets")
+	}
+	if partial, index, _ := ExtractIndex("foo"); partial != "foo" || index != -1 {
 		t.Error("could not extract no index partial")
+	}
+	if partial, _, _ := ExtractIndex("foo[bar]"); partial != "foo[bar]" {
+		t.Error("an index with alpha characters should be parsed as a segment")
 	}
 }
