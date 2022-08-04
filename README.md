@@ -37,7 +37,7 @@ The library uses no code evaluations therefore it's super safe.
 ## A simple template engine for text
 Powered by the same path expression interpreter, this tiny template engine allows you to substitute strings with
 data coming from a map. As in:
-```json
+```
 {
   "name": "${name}",
   "first_item": "${items[0]}",
