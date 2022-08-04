@@ -8,11 +8,11 @@ import (
 
 //Walk "walks" the provided data using the provided expression
 func Walk(expr string, data interface{}) (interface{}, error) {
-	return walkImpl(expr, data, -1)
+	return walkImpl(expr, data, nil)
 }
 
 // walkImpl is the actual recursive implementation of the walker
-func walkImpl(expr string, data interface{}, index int) (interface{}, error) {
+func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error) {
 	switch t := data.(type) {
 	// if it's a map...
 	case map[string]interface{}:
@@ -33,13 +33,13 @@ func walkImpl(expr string, data interface{}, index int) (interface{}, error) {
 			}
 			// If the segment contains an indexing block for arrays, then we separate the selector and the index.
 			// If it doesn't contain an index, then partial is still the correct selector, and index=-1
-			partial, index, err := ExtractIndex(items[0])
+			partial, indexes, err := ExtractIndexes(items[0])
 			// if there was an error in the extraction of the index, then we return
 			if err != nil {
 				return data, err
 			}
 			// recursion passing the selected value
-			return walkImpl(next, t[partial], index)
+			return walkImpl(next, t[partial], indexes)
 		} else {
 			// we're not selecting anymore, we can return the value
 			return items[0], nil
@@ -47,11 +47,18 @@ func walkImpl(expr string, data interface{}, index int) (interface{}, error) {
 	// if it's an array
 	case []interface{}:
 		// if there's an index selector
-		if index > -1 {
+		if indexes != nil || len(indexes) > 0 {
 			// and the index is not overflowing the array
-			if index < len(t) {
+			if indexes[0] < len(t) {
+				nextIndex := indexes[0]
+				if len(indexes) == 1 {
+					indexes = nil
+				} else {
+					indexes = indexes[1:]
+				}
+
 				// we select the indexed item and move forward
-				return walkImpl(expr, t[index], -1)
+				return walkImpl(expr, t[nextIndex], indexes)
 			} else {
 				// otherwise, we return an out-of-bounds error
 				return t, errors.New("index out of bounds")
@@ -70,21 +77,29 @@ func walkImpl(expr string, data interface{}, index int) (interface{}, error) {
 	}
 }
 
-// ExtractIndex tries to extract the index from an index notation. Will return the partial expression and the index
+// ExtractIndexes tries to extract the index from an index notation. Will return the partial expression and the index
 // as separate return values. If no index was found, then the index will be -1
-func ExtractIndex(expr string) (string, int, error) {
+func ExtractIndexes(expr string) (string, []int, error) {
 	// we find the indexing notation block
-	bits := indexExtractorRegex.FindStringSubmatch(expr)
+	bits := indexExtractorRegex.FindAllStringSubmatch(expr, 100)
 	// no indexing notation block?
-	if bits == nil {
+	if bits == nil || len(bits) == 0 {
 		// then the expression has no indexing notation. We return the expression and -1
-		return expr, -1, nil
+		return expr, nil, nil
 	}
 	// otherwise, we take care of removing the entire indexing notation from the string. We should be left with
 	// the expression alone
 	partial := indexExtractorRegex.ReplaceAllString(expr, "")
 	// we convert the index to an integer
-	index, err := strconv.Atoi(bits[1])
+	indexes := make([]int, 0)
+	for _, bx := range bits {
+		index, err := strconv.Atoi(bx[1])
+		if err != nil {
+			return partial, indexes, err
+		}
+		indexes = append(indexes, index)
+	}
+
 	// and return
-	return partial, index, err
+	return partial, indexes, nil
 }

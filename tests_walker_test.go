@@ -26,22 +26,29 @@ func TestWalk(t *testing.T) {
 	if _, err := Walk("foo.bananas", map[string]interface{}{"foo": []interface{}{map[string]interface{}{"gino": "pino"}, "bar2"}}); err == nil {
 		t.Error("referencing an attribute in an array is not returning an error")
 	}
+	if rx, _ := Walk("foo[0][1]", map[string]interface{}{"foo": []interface{}{[]interface{}{"foo", "bar"}}}); rx != "bar" {
+		t.Error("nested array selection fails")
+	}
+	if rx, _ := Walk("foo[0][1].foo", map[string]interface{}{"foo": []interface{}{[]interface{}{"foo",
+		map[string]interface{}{"foo": "bar"}}}}); rx != "bar" {
+		t.Error("nested array selection with more digging into sub-object failed")
+	}
 }
 
 func TestExtractIndex(t *testing.T) {
-	if partial, index, _ := ExtractIndex("foo[0]"); partial != "foo" || index != 0 {
+	if partial, index, _ := ExtractIndexes("foo[0]"); partial != "foo" || index[0] != 0 {
 		t.Error("could not extract 1 digit index or partial")
 	}
-	if partial, index, _ := ExtractIndex("foo[29]"); partial != "foo" || index != 29 {
+	if partial, index, _ := ExtractIndexes("foo[29]"); partial != "foo" || index[0] != 29 {
 		t.Error("could not extract 2 digits index or partial")
 	}
-	if partial, index, _ := ExtractIndex("foo[]"); partial != "foo[]" || index != -1 {
+	if partial, index, _ := ExtractIndexes("foo[]"); partial != "foo[]" || index != nil {
 		t.Error("error parsing empty square brackets")
 	}
-	if partial, index, _ := ExtractIndex("foo"); partial != "foo" || index != -1 {
+	if partial, index, _ := ExtractIndexes("foo"); partial != "foo" || index != nil {
 		t.Error("could not extract no index partial")
 	}
-	if partial, _, _ := ExtractIndex("foo[bar]"); partial != "foo[bar]" {
+	if partial, _, _ := ExtractIndexes("foo[bar]"); partial != "foo[bar]" {
 		t.Error("an index with alpha characters should be parsed as a segment")
 	}
 }
