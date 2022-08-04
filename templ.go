@@ -13,7 +13,9 @@ func Render(template string, data map[string]interface{}) (string, error) {
 		matcher := item[0]
 		expr := item[1]
 		if val, err := Walk(expr, data); err == nil {
-			template = strings.Replace(template, matcher, convertData(val), 1)
+			if val != nil {
+				template = strings.Replace(template, matcher, convertData(val), 1)
+			}
 		} else {
 			return template, err
 		}
