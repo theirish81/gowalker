@@ -36,6 +36,9 @@ func TestWalk(t *testing.T) {
 	if res, _ := Walk("foo.dawg.bar", map[string]interface{}{"foo": map[string]interface{}{"bar": "dawg"}}, nil); res != nil {
 		t.Error("nil in the path broke something")
 	}
+	if res, _ := Walk("foo.bar", map[string]interface{}{"foo": nil}, nil); res != nil {
+		t.Error("nil as legit value not working")
+	}
 }
 
 func TestWalkWithNestedTypes(t *testing.T) {
@@ -81,4 +84,5 @@ func TestWalkWithFunctions(t *testing.T) {
 	if res, _ := Walk("dawg()", map[string]interface{}{"foo": map[string]interface{}{"double_foo": "bar"}}, functions); res != "dawg()" {
 		t.Error("calling a function that does not exist not working")
 	}
+
 }

@@ -17,19 +17,20 @@ func Walk(expr string, data any, functions Functions) (any, error) {
 
 // walkImpl is the actual recursive implementation of the walker
 func walkImpl(expr string, data any, indexes []int, functions Functions) (any, error) {
-	switch reflect.TypeOf(data).Kind() { /*
-		case map[string]int: {
-			return walkImpl(expr,convertMap[int](t),indexes,functions)
+	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
+	// never know someone wants to do something with that nil
+	if data == nil {
+		if found, res, err := runFunction(expr, data, functions); err != nil {
+			return res, err
+		} else {
+			if found {
+				return res, nil
+			}
 		}
-		case map[string]float64: {
-			return walkImpl(expr,convertMap[float64](t),indexes,functions)
-		}
-		case map[string]string: {
-			return walkImpl(expr,convertMap[string](t),indexes,functions)
-		}
-		case map[string]bool: {
-			return walkImpl(expr,convertMap[bool](t),indexes,functions)
-		}*/
+		return data, nil
+	}
+	// Let's check the kind of data
+	switch reflect.TypeOf(data).Kind() {
 	// if it's a map...
 	case reflect.Map:
 		t := reflect.ValueOf(data)
@@ -68,13 +69,13 @@ func walkImpl(expr string, data any, indexes []int, functions Functions) (any, e
 				// recursion passing the selected value
 				return walkImpl(next, t.MapIndex(reflect.ValueOf(partial)).Interface(), indexes, functions)
 			} else {
-				return nil, nil
+				return walkImpl(next, nil, indexes, functions)
 			}
 		} else {
 			// we're not selecting anymore, we can return the value
 			return items[0], nil
 		}
-	// if it's an array
+	// if it's a slice...
 	case reflect.Slice:
 		t := reflect.ValueOf(data)
 		// if there's one or more index selectors
@@ -99,6 +100,7 @@ func walkImpl(expr string, data any, indexes []int, functions Functions) (any, e
 		}
 		// if someone is trying to access a property in an array...
 		if len(expr) > 0 {
+			// we try to understand if it's one fo the available functions, as it's totally legit
 			if found, res, err := runFunction(expr, data, functions); err != nil {
 				return res, err
 			} else {
@@ -106,13 +108,22 @@ func walkImpl(expr string, data any, indexes []int, functions Functions) (any, e
 					return res, nil
 				}
 			}
-			//... then they're doing something wrong
+			//... if it's not a function, they're probably doing something wrong
 			return nil, errors.New("cannot access attributes from an array")
 		}
 		// if this has no index, it means the user wants to return the entire array
 		return t.Interface(), nil
 	// all other data types
 	default:
+		// let's check if we need to run a function against it
+		if found, res, err := runFunction(expr, data, functions); err != nil {
+			return res, err
+		} else {
+			if found {
+				return res, nil
+			}
+		}
+		// otherwise, we just return the value
 		return data, nil
 	}
 }
