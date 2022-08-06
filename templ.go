@@ -2,12 +2,13 @@ package gowalker
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
-func Render(template string, data map[string]interface{}) (string, error) {
+func Render(template string, data map[string]interface{}, functions Functions) (string, error) {
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
@@ -17,7 +18,7 @@ func Render(template string, data map[string]interface{}) (string, error) {
 		// expr is what's within the brackets
 		expr := item[1]
 		// let's walk the path for the expression against the provided data
-		if val, err := Walk(expr, data); err == nil {
+		if val, err := Walk(expr, data, functions); err == nil {
 			// if the value is not nil...
 			if val != nil {
 				// then we replace the matcher with what we've found.
@@ -37,8 +38,10 @@ func Render(template string, data map[string]interface{}) (string, error) {
 // convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
 	switch t := data.(type) {
+	case float64:
+		return fmt.Sprintf("%f", t)
 	case int:
-		return strconv.Itoa(t)
+		return fmt.Sprintf("%d", t)
 	case bool:
 		return strconv.FormatBool(t)
 	case []interface{}, map[string]interface{}:

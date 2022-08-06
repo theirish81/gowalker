@@ -7,12 +7,15 @@ import (
 )
 
 //Walk "walks" the provided data using the provided expression
-func Walk(expr string, data interface{}) (interface{}, error) {
-	return walkImpl(expr, data, nil)
+func Walk(expr string, data interface{}, functions Functions) (interface{}, error) {
+	if functions == nil {
+		functions = Functions{}
+	}
+	return walkImpl(expr, data, nil, functions)
 }
 
 // walkImpl is the actual recursive implementation of the walker
-func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error) {
+func walkImpl(expr string, data interface{}, indexes []int, functions Functions) (interface{}, error) {
 	switch t := data.(type) {
 	// if it's a map...
 	case map[string]interface{}:
@@ -26,6 +29,14 @@ func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error)
 		next := ""
 		// if we got at least one item, it means we're still selecting
 		if len(items) > 0 {
+			if found, res, err := RunFunction(items[0], data, functions); err != nil {
+				return res, err
+			} else {
+				if found {
+					return res, nil
+				}
+			}
+
 			// if we got more than 1 item, it means that not only we're still selecting, but there will be more
 			// segments to select after. So we take the "next" part of the expression for the following recursion.
 			if len(items) > 1 {
@@ -39,7 +50,7 @@ func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error)
 				return data, err
 			}
 			// recursion passing the selected value
-			return walkImpl(next, t[partial], indexes)
+			return walkImpl(next, t[partial], indexes, functions)
 		} else {
 			// we're not selecting anymore, we can return the value
 			return items[0], nil
@@ -60,7 +71,7 @@ func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error)
 				}
 
 				// we select the indexed item and move forward
-				return walkImpl(expr, t[nextIndex], indexes)
+				return walkImpl(expr, t[nextIndex], indexes, functions)
 			} else {
 				// if the index exceeds the array size, we return an out-of-bounds error
 				return t, errors.New("index out of bounds")
@@ -68,6 +79,13 @@ func walkImpl(expr string, data interface{}, indexes []int) (interface{}, error)
 		}
 		// if someone is trying to access a property in an array...
 		if len(expr) > 0 {
+			if found, res, err := RunFunction(expr, data, functions); err != nil {
+				return res, err
+			} else {
+				if found {
+					return res, nil
+				}
+			}
 			//... then they're doing something wrong
 			return nil, errors.New("cannot access attributes from an array")
 		}
@@ -103,7 +121,6 @@ func ExtractIndexes(expr string) (string, []int, error) {
 		}
 		indexes = append(indexes, index)
 	}
-
 	// and return
 	return partial, indexes, nil
 }
