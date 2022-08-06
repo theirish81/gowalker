@@ -5,19 +5,19 @@ import (
 )
 
 func TestExtractFunctionName(t *testing.T) {
-	if ExtractFunctionName("foo(bar)") != "foo" {
+	if extractFunctionName("foo(bar)") != "foo" {
 		t.Error("could not extract function name")
 	}
 }
 
 func TestExtractParameters(t *testing.T) {
-	if ExtractParameters("foo(bar)")[0] != "bar" {
+	if extractParameters("foo(bar)")[0] != "bar" {
 		t.Error("failed at extracting one parameter")
 	}
-	if ExtractParameters("foo(bar,dawg)")[1] != "dawg" {
+	if extractParameters("foo(bar,dawg)")[1] != "dawg" {
 		t.Error("failed at extracting second parameter")
 	}
-	if ExtractParameters("foo(bar,\"dawg\")")[1] != "\"dawg\"" {
+	if extractParameters("foo(bar,\"dawg\")")[1] != "\"dawg\"" {
 		t.Error("failed at extracting second parameter with quotes")
 	}
 }

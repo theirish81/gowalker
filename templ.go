@@ -3,6 +3,7 @@ package gowalker
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -44,10 +45,15 @@ func convertData(data interface{}) string {
 		return fmt.Sprintf("%d", t)
 	case bool:
 		return strconv.FormatBool(t)
-	case []interface{}, map[string]interface{}:
+	case []interface{}:
 		d, _ := json.Marshal(data)
 		return string(d)
+	case map[string]interface{}:
+		d, _ := json.Marshal(data)
+		return string(d)
+	case string:
+		return t
 	default:
-		return data.(string)
+		return data.(reflect.Value).String()
 	}
 }

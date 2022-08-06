@@ -38,20 +38,26 @@ func TestWalk(t *testing.T) {
 	}
 }
 
+func TestWalkWithNestedTypes(t *testing.T) {
+	if rx, _ := Walk("foo.double_foo", map[string]map[string]string{"foo": {"double_foo": "bar"}}, nil); rx != "bar" {
+		t.Error("basic map navigation failing")
+	}
+}
+
 func TestExtractIndex(t *testing.T) {
-	if partial, index, _ := ExtractIndexes("foo[0]"); partial != "foo" || index[0] != 0 {
+	if partial, index, _ := extractIndexes("foo[0]"); partial != "foo" || index[0] != 0 {
 		t.Error("could not extract 1 digit index or partial")
 	}
-	if partial, index, _ := ExtractIndexes("foo[29]"); partial != "foo" || index[0] != 29 {
+	if partial, index, _ := extractIndexes("foo[29]"); partial != "foo" || index[0] != 29 {
 		t.Error("could not extract 2 digits index or partial")
 	}
-	if partial, index, _ := ExtractIndexes("foo[]"); partial != "foo[]" || index != nil {
+	if partial, index, _ := extractIndexes("foo[]"); partial != "foo[]" || index != nil {
 		t.Error("error parsing empty square brackets")
 	}
-	if partial, index, _ := ExtractIndexes("foo"); partial != "foo" || index != nil {
+	if partial, index, _ := extractIndexes("foo"); partial != "foo" || index != nil {
 		t.Error("could not extract no index partial")
 	}
-	if partial, _, _ := ExtractIndexes("foo[bar]"); partial != "foo[bar]" {
+	if partial, _, _ := extractIndexes("foo[bar]"); partial != "foo[bar]" {
 		t.Error("an index with alpha characters should be parsed as a segment")
 	}
 }
@@ -64,7 +70,7 @@ func TestWalkWithFunctions(t *testing.T) {
 	f1 := func(data ...interface{}) (interface{}, error) {
 		return "I'm crazy: " + data[0].(map[string]interface{})["double_foo"].(string), nil
 	}
-	functions := Functions{}
+	functions := NewFunctions()
 	functions.Add("hello", f0).Add("debug", f1)
 	if res, _ := Walk("hello()", map[string]interface{}{"foo": map[string]interface{}{"double_foo": "bar"}}, functions); res != "hello world" {
 		t.Error("basic function calling not working")
