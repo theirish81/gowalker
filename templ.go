@@ -2,12 +2,14 @@ package gowalker
 
 import (
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 )
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
-func Render(template string, data map[string]interface{}) (string, error) {
+func Render(template string, data map[string]interface{}, functions Functions) (string, error) {
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
@@ -17,7 +19,7 @@ func Render(template string, data map[string]interface{}) (string, error) {
 		// expr is what's within the brackets
 		expr := item[1]
 		// let's walk the path for the expression against the provided data
-		if val, err := Walk(expr, data); err == nil {
+		if val, err := Walk(expr, data, functions); err == nil {
 			// if the value is not nil...
 			if val != nil {
 				// then we replace the matcher with what we've found.
@@ -36,15 +38,16 @@ func Render(template string, data map[string]interface{}) (string, error) {
 
 // convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
-	switch t := data.(type) {
-	case int:
-		return strconv.Itoa(t)
-	case bool:
-		return strconv.FormatBool(t)
-	case []interface{}, map[string]interface{}:
+	switch reflect.TypeOf(data).Kind() {
+	case reflect.Float64:
+		return fmt.Sprintf("%f", data)
+	case reflect.Int:
+		return fmt.Sprintf("%d", data)
+	case reflect.Bool:
+		return strconv.FormatBool(data.(bool))
+	case reflect.Slice, reflect.Map:
 		d, _ := json.Marshal(data)
 		return string(d)
-	default:
-		return data.(string)
 	}
+	return data.(string)
 }
