@@ -38,22 +38,16 @@ func Render(template string, data map[string]interface{}, functions Functions) (
 
 // convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
-	switch t := data.(type) {
-	case float64:
-		return fmt.Sprintf("%f", t)
-	case int:
-		return fmt.Sprintf("%d", t)
-	case bool:
-		return strconv.FormatBool(t)
-	case []interface{}:
+	switch reflect.TypeOf(data).Kind() {
+	case reflect.Float64:
+		return fmt.Sprintf("%f", data)
+	case reflect.Int:
+		return fmt.Sprintf("%d", data)
+	case reflect.Bool:
+		return strconv.FormatBool(data.(bool))
+	case reflect.Slice, reflect.Map:
 		d, _ := json.Marshal(data)
 		return string(d)
-	case map[string]interface{}:
-		d, _ := json.Marshal(data)
-		return string(d)
-	case string:
-		return t
-	default:
-		return data.(reflect.Value).String()
 	}
+	return data.(reflect.Value).String()
 }
