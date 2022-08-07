@@ -67,10 +67,10 @@ func TestExtractIndex(t *testing.T) {
 
 func TestWalkWithFunctions(t *testing.T) {
 
-	f0 := func(data any, params ...any) (interface{}, error) {
+	f0 := func(data any, params ...string) (interface{}, error) {
 		return "hello world", nil
 	}
-	f1 := func(data any, params ...interface{}) (interface{}, error) {
+	f1 := func(data any, params ...string) (interface{}, error) {
 		return "I'm crazy: " + data.(map[string]interface{})["double_foo"].(string), nil
 	}
 	functions := NewFunctions()

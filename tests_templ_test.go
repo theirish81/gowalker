@@ -47,10 +47,10 @@ func TestRender(t *testing.T) {
 
 func TestRenderWithFunctions(t *testing.T) {
 	functions := NewFunctions()
-	functions.Add("hello", func(data any, params ...any) (any, error) {
+	functions.Add("hello", func(data any, params ...string) (any, error) {
 		return "hello world", nil
 	})
-	functions.Add("first", func(data any, params ...any) (any, error) {
+	functions.Add("first", func(data any, params ...string) (any, error) {
 		return data.([]any)[0], nil
 	})
 	if res, _ := Render("What do we all say? ${hello()}", map[string]any{}, functions); res != "What do we all say? hello world" {
