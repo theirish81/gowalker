@@ -97,9 +97,11 @@ functions.Add("sayHello",func (scope any, params ...any) (any, error) {
     }
 	if data,ok := scope.(string); ok {
         return "hello "data+" from "+params[0]	
+    } else {
+        return nil, errors.New("cannot run sayHello against a data type that is not string")
     }
-	return nil,errors.New("cannot run sayHello against a data type that is not string")
 })
+//...
 Walk("items[0].sayHello(Barney)",data,functions)
 ```
 will return:
