@@ -47,11 +47,11 @@ func TestRender(t *testing.T) {
 
 func TestRenderWithFunctions(t *testing.T) {
 	functions := NewFunctions()
-	functions.Add("hello", func(data ...any) (any, error) {
+	functions.Add("hello", func(data any, params ...any) (any, error) {
 		return "hello world", nil
 	})
-	functions.Add("first", func(data ...any) (any, error) {
-		return data[0].([]any)[0], nil
+	functions.Add("first", func(data any, params ...any) (any, error) {
+		return data.([]any)[0], nil
 	})
 	if res, _ := Render("What do we all say? ${hello()}", map[string]any{}, functions); res != "What do we all say? hello world" {
 		t.Error("simple function in template not working")
