@@ -42,3 +42,23 @@ func TestSplitFunction(t *testing.T) {
 		t.Error("split with pipe string not working")
 	}
 }
+
+func TestCollectFunction(t *testing.T) {
+	res, _ := Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"foo": 4, "bar": 5, "gino": 6}}}, NewFunctions())
+	rx := res.([]map[string]interface{})
+	if len(rx) != 2 {
+		t.Error("did not return all items in array")
+	}
+	if len(rx[0]) != 2 || len(rx[1]) != 2 {
+		t.Error("did not select all items in the array")
+	}
+	if rx[0]["foo"] != 1 || rx[1]["foo"] != 4 {
+		t.Error("did not collect the right values")
+	}
+	res, _ = Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"bar": 5, "gino": 6}}}, NewFunctions())
+	rx = res.([]map[string]interface{})
+	if len(rx[0]) != 2 || len(rx[1]) != 1 {
+		t.Error("not the exact number of attributes on missing key")
+	}
+
+}

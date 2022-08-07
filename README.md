@@ -76,6 +76,8 @@ Where myArray is an array of objects, it will collect all the fields named `bana
 The engine comes with just a few of default functions for demonstration purposes, such as:
 * `size()`: returns the size of the object in scope
 * `split(sep)`: splits the string in scope, using a separator
+* `collect(...)`: given an array containing maps, it will return an array of maps in which the maps only show the
+  provided keys
 You can implement more by passing the `functions` parameter when invoking `Walk`.
 Example:
 

@@ -17,6 +17,7 @@ func NewFunctions() Functions {
 	fx := Functions{}
 	fx.Add("size", fx.size)
 	fx.Add("split", fx.split)
+	fx.Add("collect", fx.collect)
 	return fx
 }
 
@@ -52,6 +53,36 @@ func (f *Functions) split(scope any, params ...string) (any, error) {
 		return strings.Split(val, params[0]), nil
 	} else {
 		return nil, errors.New("split only supported for strings")
+	}
+}
+
+func (f *Functions) collect(scope any, params ...string) (any, error) {
+	if len(params) < 1 {
+		return nil, errors.New("list of fields not provided")
+	}
+	kind := reflect.TypeOf(scope).Kind()
+	if kind == reflect.Slice {
+		data := reflect.ValueOf(scope)
+		size := data.Len()
+		res := make([]map[string]interface{}, size)
+		for i := 0; i < size; i++ {
+			item := data.Index(i)
+			if item.Kind() == reflect.Map {
+				block := map[string]interface{}{}
+				for _, p := range params {
+					found := item.MapIndex(reflect.ValueOf(p))
+					if found.IsValid() && !found.IsZero() && found.CanInterface() {
+						block[p] = found.Interface()
+					}
+				}
+				res[i] = block
+			} else {
+				return nil, errors.New("at least one item in the array is not a map")
+			}
+		}
+		return res, nil
+	} else {
+		return nil, errors.New("operation can only be applied to arrays of maps")
 	}
 }
 
