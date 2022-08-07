@@ -61,4 +61,8 @@ func TestRenderWithFunctions(t *testing.T) {
 		t.Error("reflexive function not working")
 	}
 
+	if res, _ := Render("Splitting and printing ${foo.split(\\,)}", map[string]interface{}{"foo": "bar,dawg"}, functions); res != "Splitting and printing [\"bar\",\"dawg\"]" {
+		t.Error("error in running split function in template")
+	}
+
 }

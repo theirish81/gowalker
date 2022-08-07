@@ -10,4 +10,4 @@ var indexExtractorRegex, _ = regexp.Compile("\\[([0-9]+)\\]")
 
 var functionExtractorRegex, _ = regexp.Compile("(^.+)(\\((.*)\\))$")
 
-var paramExtractRegex, _ = regexp.Compile("([a-zA-Z0-9|\\/;:\\.\"](\\\\,?)*)*")
+var paramExtractRegex, _ = regexp.Compile("([a-zA-Z0-9|\\/;:\\.\"]|(\\\\,?)*)*")

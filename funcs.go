@@ -79,6 +79,9 @@ func extractParameterString(expr string) string {
 func extractParameters(signature string) []string {
 	paramString := extractParameterString(signature)
 	params := paramExtractRegex.FindAllString(paramString, -1)
+	for i, p := range params {
+		params[i] = strings.ReplaceAll(p, "\\,", ",")
+	}
 	return params
 }
 
