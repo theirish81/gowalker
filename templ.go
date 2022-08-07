@@ -49,5 +49,5 @@ func convertData(data interface{}) string {
 		d, _ := json.Marshal(data)
 		return string(d)
 	}
-	return data.(reflect.Value).String()
+	return data.(string)
 }
