@@ -37,15 +37,18 @@ func (f *Functions) Add(key string, function func(data any, params ...string) (a
 // size is one of the base functions for the user to invoke.
 // It returns the size of maps, slices and strings
 func (f *Functions) size(scope any, _ ...string) (any, error) {
+	// if scope is nil, then we return an error
 	if scope == nil {
 		return nil, errors.New("nil reference to size function")
 	}
 	val := reflect.ValueOf(scope)
 	kind := reflect.TypeOf(scope).Kind()
 	switch kind {
+	// maps, slices and strings, all support Len
 	case reflect.Map, reflect.Slice, reflect.String:
 		return val.Len(), nil
 	default:
+		// in any other cases, we return an error
 		return nil, errors.New("size not supported for: " + kind.String())
 	}
 }
@@ -53,54 +56,76 @@ func (f *Functions) size(scope any, _ ...string) (any, error) {
 // split is one of the base functions for the user to invoke.
 // It splits a string into an array, given a separator
 func (f *Functions) split(scope any, params ...string) (any, error) {
+	// returning an error if the separator param was not provided
 	if len(params) < 1 {
 		return nil, errors.New("separator not provided")
 	}
+	// if the scope is a string, then we can proceed with the split
 	if val, ok := scope.(string); ok {
 		return strings.Split(val, params[0]), nil
 	} else {
+		// returning an error if attempting a split on a data type that is not a string
 		return nil, errors.New("split only supported for strings")
 	}
 }
 
+// render will render a sub-template against the selected scope. It requires one param that is the name of the
+// sub-template
 func (f *Functions) render(scope any, params ...string) (any, error) {
+	// returning an error if the sub-template name was not provided
 	if len(params) < 1 {
 		return nil, errors.New("template not provided")
 	}
+	// if the sub-template name is found, we can run Render against it
 	if templ, ok := f.functionScope["_"+params[0]]; ok {
 		return Render(templ.(string), scope, f)
 	} else {
+		// returning an error if the template was not found
 		return nil, errors.New("template not found")
 	}
 }
 
+// renderEach will render a sub-template against each element in the provided scope, assuming it's an array.
+// It requires one param that is the name of the sub-template. Additionally, it accepts a second param that is a
+// separator string to append at each iteration.
 func (f *Functions) renderEach(scope any, params ...string) (any, error) {
+	// if there are no params, it's an error
 	if len(params) < 1 {
 		return nil, errors.New("template not provided")
 	}
+	// if it has two params, we have a separator string
 	sep := ""
 	if len(params) == 2 {
 		sep = params[1]
 	}
+	// if the sub-template exists
 	if templ, ok := f.functionScope["_"+params[0]]; ok {
+		// and the scope is a slice
 		if reflect.TypeOf(scope).Kind() == reflect.Slice {
 			sliceVal := reflect.ValueOf(scope)
 			res := ""
+			// against each item in the slice
 			for i := 0; i < sliceVal.Len(); i++ {
+				// we render the sub-template
 				if tmp, err := Render(templ.(string), sliceVal.Index(i).Interface(), f); err == nil {
 					res = res + tmp
+					// if this is not the last item in the list, we print the separator character
 					if i < sliceVal.Len()-1 {
 						res += sep
 					}
 				} else {
+					// returning an error if Render failed
 					return nil, err
 				}
 			}
+			// returning the collected strings
 			return res, nil
 		} else {
+			// returning an error if the data type of the scope was not a slice
 			return nil, errors.New("cannot iterate on a data type that is not an array")
 		}
 	} else {
+		// returning an error if the template was not found
 		return nil, errors.New("template not found")
 	}
 }

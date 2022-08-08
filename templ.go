@@ -36,8 +36,12 @@ func Render(template string, data any, functions *Functions) (string, error) {
 	return template, nil
 }
 
-func RenderAll(template string, subTemplate map[string]string, data map[string]interface{}, functions *Functions) (string, error) {
-	for k, v := range subTemplate {
+// RenderAll will render the provided templates, making subTemplates available for complex rendering
+func RenderAll(template string, subTemplates map[string]string, data map[string]interface{}, functions *Functions) (string, error) {
+	if subTemplates == nil {
+		subTemplates = map[string]string{}
+	}
+	for k, v := range subTemplates {
 		functions.functionScope["_"+k] = v
 	}
 	return Render(template, data, functions)

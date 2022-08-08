@@ -24,7 +24,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 			return res, err
 		} else {
 			if found {
-				return res, nil
+				return res, err
 			}
 		}
 		return data, nil
@@ -51,7 +51,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 				return res, err
 			} else {
 				if found {
-					return res, nil
+					return res, err
 				}
 			}
 
@@ -108,7 +108,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 				return res, err
 			} else {
 				if found {
-					return res, nil
+					return res, err
 				}
 			}
 			//... if it's not a function, they're probably doing something wrong
@@ -123,7 +123,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 			return res, err
 		} else {
 			if found {
-				return res, nil
+				return res, err
 			}
 		}
 		// otherwise, we just return the value

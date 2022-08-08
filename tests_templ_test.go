@@ -72,6 +72,10 @@ func TestRenderAllRender(t *testing.T) {
 	if res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test T2 [\"foo\",\"bar\"]" {
 		t.Error("wrong sub template")
 	}
+
+	if res, err := RenderAll(t1, nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test ${items.render(t2)}" && err.Error() != "template not found" {
+		t.Error("missing sub-template wrong behavior")
+	}
 }
 
 func TestRenderAllRenderEach(t *testing.T) {
@@ -79,5 +83,8 @@ func TestRenderAllRenderEach(t *testing.T) {
 	t2 := "\nT2 ${.}"
 	if res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test \nT2 foo,\nT2 bar" {
 		t.Error("renderEach not working as expected")
+	}
+	if res, err := RenderAll(t1, nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test ${items.renderEach(t2,\\,)}" && err.Error() != "template not found" {
+		t.Error("missing sub-template wrong behavior")
 	}
 }
