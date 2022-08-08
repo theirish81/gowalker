@@ -33,19 +33,11 @@ Walk("items",data,nil)              // returns ["keys","wallet"]
 ```
 The library uses no code evaluations therefore it's super safe.
 
-
-## A simple template engine
-Powered by the same path expression interpreter, this tiny template engine allows you to substitute strings with
-data coming from a map. As in:
-```
-{
-  "name": "${name}",
-  "first_item": "${items[0]}",
-  "all_items": ${items}
-}
-```
-When a complex object is referenced in an expression, the rendering engine will automatically convert it to its
-JSON counterpart.
+### Expressions
+Expressions are actually pretty easy. A few notes:
+* the path separator through maps is the `.` (dot). No square-bracket notation is supported or required
+* The index expression in arrays uses the square-bracket notation
+* the `.` (dot) alone in an expression refers to the whole scope
 
 ### Functions
 Expressions also support the use of functions.
@@ -111,3 +103,61 @@ will return:
 ```
 hello foo from Barney
 ```
+
+
+## A simple template engine
+Powered by the same path expression interpreter, this tiny template engine allows you to substitute strings with
+data coming from a map. As in:
+```
+{
+  "name": "${name}",
+  "first_item": "${items[0]}",
+  "all_items": ${items}
+}
+```
+When a complex object is referenced in an expression, the rendering engine will automatically convert it to its
+JSON counterpart.
+
+Just call:
+```go
+data := map[string]any{"name": "pino", "items": []any{"keys", "wallet"}}
+templ := `{
+    "name": "${name}",
+    "first_item": "${items[0]}",
+    "all_items": ${items}
+}`
+res, _ := Render(templ, data, nil)
+```
+and you're set. You can, of course, pass a `Functions` instance as third parameter.
+
+### Sub-templates
+Sometimes you need to split your templates into multiple files. There are typically two scenarios when this is
+recommended in GoWalker:
+* When you want to share a sub-template across multiple master templates
+* When you need to run a template against each item in an array
+
+Here's an example of simple template splitting. It uses the `render` function against `items`
+```go
+t1 := "this is a test ${items.render(t2)}"
+t2 := "T2 ${.}"
+res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+// prints:
+// `this is a test T2 ["foo","bar"]`
+}
+```
+
+* `render(templateName)`: renders a sub-template against the variable it was run against
+
+And here's an example where we iterate over an array. It uses the `renderEach` function against `items`:
+```go
+t1 := "this is a test ${items.renderEach(t2,\\,)}"
+t2 := "\nT2 ${.}"
+res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+// prints:
+// this is a test
+// T2 foo
+// T2 bar
+```
+
+* `renderEach(templateName,sep?)`: renders a sub-template against each item of the array it was run against.
+  Additionally, you can provide an optional separator string that will be printed between an iteration and the next 
