@@ -146,15 +146,15 @@ func (f *Functions) collect(scope any, params ...string) (any, error) {
 		res := make([]map[string]interface{}, size)
 		// iterating the original array
 		for i := 0; i < size; i++ {
-			item := data.Index(i)
+			item := data.Index(i).Interface()
 			// all elements have to be maps
-			if item.Kind() == reflect.Map {
+			if reflect.TypeOf(item).Kind() == reflect.Map {
 				// creating derivative element
 				block := map[string]interface{}{}
 				// for each parameter expressed in the arguments
 				for _, p := range params {
 					// if we find an attribute with that name
-					found := item.MapIndex(reflect.ValueOf(p))
+					found := reflect.ValueOf(item).MapIndex(reflect.ValueOf(p))
 					if found.IsValid() && !found.IsZero() && found.CanInterface() {
 						// we copy the value over
 						block[p] = found.Interface()
