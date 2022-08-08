@@ -3,6 +3,7 @@ package gowalker
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -50,10 +51,14 @@ func RenderAll(template string, subTemplates map[string]string, data map[string]
 // convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
 	switch reflect.TypeOf(data).Kind() {
-	case reflect.Float64:
-		return fmt.Sprintf("%f", data)
 	case reflect.Int:
 		return fmt.Sprintf("%d", data)
+	case reflect.Float64:
+		rounded := math.Round(data.(float64))
+		if rounded == data.(float64) {
+			return convertData(int(rounded))
+		}
+		return fmt.Sprintf("%f", data)
 	case reflect.Bool:
 		return strconv.FormatBool(data.(bool))
 	case reflect.Slice, reflect.Map:
