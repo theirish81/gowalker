@@ -8,7 +8,7 @@ import (
 )
 
 // Walk "walks" the provided data using the provided expression
-func Walk(expr string, data any, functions Functions) (any, error) {
+func Walk(expr string, data any, functions *Functions) (any, error) {
 	if functions == nil {
 		functions = NewFunctions()
 	}
@@ -16,7 +16,7 @@ func Walk(expr string, data any, functions Functions) (any, error) {
 }
 
 // walkImpl is the actual recursive implementation of the walker
-func walkImpl(expr string, data any, indexes []int, functions Functions) (any, error) {
+func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, error) {
 	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
 	// never know someone wants to do something with that nil
 	if data == nil {
@@ -27,6 +27,9 @@ func walkImpl(expr string, data any, indexes []int, functions Functions) (any, e
 				return res, nil
 			}
 		}
+		return data, nil
+	}
+	if expr == "." {
 		return data, nil
 	}
 	// Let's check the kind of data

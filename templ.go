@@ -9,7 +9,7 @@ import (
 )
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
-func Render(template string, data map[string]interface{}, functions Functions) (string, error) {
+func Render(template string, data any, functions *Functions) (string, error) {
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
@@ -34,6 +34,13 @@ func Render(template string, data map[string]interface{}, functions Functions) (
 	}
 	// returning the results of our effort
 	return template, nil
+}
+
+func RenderAll(template string, subTemplate map[string]string, data map[string]interface{}, functions *Functions) (string, error) {
+	for k, v := range subTemplate {
+		functions.functionScope["_"+k] = v
+	}
+	return Render(template, data, functions)
 }
 
 // convertData converts the provided data into a string for the template

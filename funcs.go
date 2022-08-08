@@ -6,24 +6,31 @@ import (
 	"strings"
 )
 
+type mapOfFunctions map[string]func(scope any, params ...string) (any, error)
+
 // Functions is a map of actual Golang functions the expression can call.
 // When invoked, a function receives a variadic argument in which the first position is always the current selected
 // element in the expression, while the following ones are provided as params.
 // Functions will return a value and an error
-type Functions map[string]func(scope any, params ...string) (any, error)
+type Functions struct {
+	mapOfFunctions
+	functionScope map[string]interface{}
+}
 
 // NewFunctions is the constructor of Functions and adds some very basic implementations
-func NewFunctions() Functions {
-	fx := Functions{}
+func NewFunctions() *Functions {
+	fx := Functions{mapOfFunctions{}, map[string]interface{}{}}
 	fx.Add("size", fx.size)
 	fx.Add("split", fx.split)
 	fx.Add("collect", fx.collect)
-	return fx
+	fx.Add("render", fx.render)
+	fx.Add("renderEach", fx.renderEach)
+	return &fx
 }
 
 // Add adds a function ot the Functions' data structure
 func (f *Functions) Add(key string, function func(data any, params ...string) (any, error)) *Functions {
-	(*f)[key] = function
+	f.mapOfFunctions[key] = function
 	return f
 }
 
@@ -53,6 +60,48 @@ func (f *Functions) split(scope any, params ...string) (any, error) {
 		return strings.Split(val, params[0]), nil
 	} else {
 		return nil, errors.New("split only supported for strings")
+	}
+}
+
+func (f *Functions) render(scope any, params ...string) (any, error) {
+	if len(params) < 1 {
+		return nil, errors.New("template not provided")
+	}
+	if templ, ok := f.functionScope["_"+params[0]]; ok {
+		return Render(templ.(string), scope, f)
+	} else {
+		return nil, errors.New("template not found")
+	}
+}
+
+func (f *Functions) renderEach(scope any, params ...string) (any, error) {
+	if len(params) < 1 {
+		return nil, errors.New("template not provided")
+	}
+	sep := ""
+	if len(params) == 2 {
+		sep = params[1]
+	}
+	if templ, ok := f.functionScope["_"+params[0]]; ok {
+		if reflect.TypeOf(scope).Kind() == reflect.Slice {
+			sliceVal := reflect.ValueOf(scope)
+			res := ""
+			for i := 0; i < sliceVal.Len(); i++ {
+				if tmp, err := Render(templ.(string), sliceVal.Index(i).Interface(), f); err == nil {
+					res = res + tmp
+					if i < sliceVal.Len()-1 {
+						res += sep
+					}
+				} else {
+					return nil, err
+				}
+			}
+			return res, nil
+		} else {
+			return nil, errors.New("cannot iterate on a data type that is not an array")
+		}
+	} else {
+		return nil, errors.New("template not found")
 	}
 }
 
@@ -134,10 +183,10 @@ func extractParameters(signature string) []string {
 // The first return value will be `true` if a function was indeed found in expr and the execution of the function
 // was attempted. If the functions ran, the second return value will be the result of the function execution.
 // The third parameter is an error, in case the function failed
-func runFunction(expr string, data interface{}, functions Functions) (bool, interface{}, error) {
+func runFunction(expr string, data interface{}, functions *Functions) (bool, interface{}, error) {
 	if fx := extractFunctionName(expr); fx != "" {
 		params := extractParameters(expr)
-		if function, ok := functions[fx]; ok {
+		if function, ok := functions.mapOfFunctions[fx]; ok {
 			res, err := function(data, params...)
 			return true, res, err
 		} else {
