@@ -3,13 +3,14 @@ package gowalker
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
 )
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
-func Render(template string, data map[string]interface{}, functions Functions) (string, error) {
+func Render(template string, data any, functions *Functions) (string, error) {
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
@@ -36,13 +37,28 @@ func Render(template string, data map[string]interface{}, functions Functions) (
 	return template, nil
 }
 
+// RenderAll will render the provided templates, making subTemplates available for complex rendering
+func RenderAll(template string, subTemplates map[string]string, data map[string]interface{}, functions *Functions) (string, error) {
+	if subTemplates == nil {
+		subTemplates = map[string]string{}
+	}
+	for k, v := range subTemplates {
+		functions.functionScope["_"+k] = v
+	}
+	return Render(template, data, functions)
+}
+
 // convertData converts the provided data into a string for the template
 func convertData(data interface{}) string {
 	switch reflect.TypeOf(data).Kind() {
-	case reflect.Float64:
-		return fmt.Sprintf("%f", data)
 	case reflect.Int:
 		return fmt.Sprintf("%d", data)
+	case reflect.Float64:
+		rounded := math.Round(data.(float64))
+		if rounded == data.(float64) {
+			return convertData(int(rounded))
+		}
+		return fmt.Sprintf("%f", data)
 	case reflect.Bool:
 		return strconv.FormatBool(data.(bool))
 	case reflect.Slice, reflect.Map:
