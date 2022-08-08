@@ -94,7 +94,7 @@ Assuming you have a data structure as follows:
 
 ```go
 functions := NewFunctions()
-functions.Add("sayHello",func (scope any, params ...any) (any, error) {
+functions.Add("sayHello",func (scope any, params ...string) (any, error) {
 	if len(params) < 1 {
 		return nil,errors.New("not enough parameters")
     }
