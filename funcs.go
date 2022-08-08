@@ -56,36 +56,53 @@ func (f *Functions) split(scope any, params ...string) (any, error) {
 	}
 }
 
+// collect expects an array of objects to be the scope. Params is a list of fields we're interested in.
+// The function will produce a derivative array of objects containing only the fields expressed in params
 func (f *Functions) collect(scope any, params ...string) (any, error) {
+	// if no params are passed, then we return an error
 	if len(params) < 1 {
 		return nil, errors.New("list of fields not provided")
 	}
 	kind := reflect.TypeOf(scope).Kind()
+	// if it's a slice, then the scope probably is the correct data type
 	if kind == reflect.Slice {
 		data := reflect.ValueOf(scope)
 		size := data.Len()
+		// let's create an array of maps that's going to hold the results
 		res := make([]map[string]interface{}, size)
+		// iterating the original array
 		for i := 0; i < size; i++ {
 			item := data.Index(i)
+			// all elements have to be maps
 			if item.Kind() == reflect.Map {
+				// creating derivative element
 				block := map[string]interface{}{}
+				// for each parameter expressed in the arguments
 				for _, p := range params {
+					// if we find an attribute with that name
 					found := item.MapIndex(reflect.ValueOf(p))
 					if found.IsValid() && !found.IsZero() && found.CanInterface() {
+						// we copy the value over
 						block[p] = found.Interface()
 					}
 				}
+				// assigning the newly created map to the new array
 				res[i] = block
 			} else {
+				// if the `kind` of a child object is not a map, then it's an error
 				return nil, errors.New("at least one item in the array is not a map")
 			}
 		}
+		// returning the derivative array
 		return res, nil
 	} else {
+		// if the given scope is not even an array, then we return an error
 		return nil, errors.New("operation can only be applied to arrays of maps")
 	}
 }
 
+// extractFunctionName will extract the function name from an expression. If the expression doesn't look like a function
+// call, then it returns an empty string
 func extractFunctionName(expr string) string {
 	names := functionExtractorRegex.FindStringSubmatch(expr)
 	if names != nil && len(names) > 1 {
@@ -94,6 +111,7 @@ func extractFunctionName(expr string) string {
 	return ""
 }
 
+// extractParameterString will extract the portion of the parameters from an expression that looks like a function call
 func extractParameterString(expr string) string {
 	names := functionExtractorRegex.FindStringSubmatch(expr)
 	if names != nil && len(names) > 2 {
@@ -101,6 +119,8 @@ func extractParameterString(expr string) string {
 	}
 	return ""
 }
+
+// extractParameters will try to extract the parameters from a function call string
 func extractParameters(signature string) []string {
 	paramString := extractParameterString(signature)
 	params := paramExtractRegex.FindAllString(paramString, -1)
@@ -110,6 +130,10 @@ func extractParameters(signature string) []string {
 	return params
 }
 
+// runFunction will try to run the function expressed by expr, against data, with the provided functions.
+// The first return value will be `true` if a function was indeed found in expr and the execution of the function
+// was attempted. If the functions ran, the second return value will be the result of the function execution.
+// The third parameter is an error, in case the function failed
 func runFunction(expr string, data interface{}, functions Functions) (bool, interface{}, error) {
 	if fx := extractFunctionName(expr); fx != "" {
 		params := extractParameters(expr)
