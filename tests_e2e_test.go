@@ -6,7 +6,7 @@ import (
 )
 
 func TestFromJSON(t *testing.T) {
-	var scope map[string]interface{}
+	var scope map[string]any
 	_ = json.Unmarshal([]byte(`{
 								"id":"banana",
 								"meta": {

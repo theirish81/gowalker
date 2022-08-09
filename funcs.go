@@ -11,15 +11,17 @@ type mapOfFunctions map[string]func(scope any, params ...string) (any, error)
 // Functions is a map of actual Golang functions the expression can call.
 // When invoked, a function receives a variadic argument in which the first position is always the current selected
 // element in the expression, while the following ones are provided as params.
-// Functions will return a value and an error
+// Functions will return a value and an error.
+// mapOfFunctions is the actual map of key=function
+// functionScope is an extra scope a function can access if part of Functions
 type Functions struct {
 	mapOfFunctions
-	functionScope map[string]interface{}
+	functionScope map[string]any
 }
 
 // NewFunctions is the constructor of Functions and adds some very basic implementations
 func NewFunctions() *Functions {
-	fx := Functions{mapOfFunctions{}, map[string]interface{}{}}
+	fx := Functions{mapOfFunctions{}, map[string]any{}}
 	fx.Add("size", fx.size)
 	fx.Add("split", fx.split)
 	fx.Add("collect", fx.collect)
@@ -143,14 +145,14 @@ func (f *Functions) collect(scope any, params ...string) (any, error) {
 		data := reflect.ValueOf(scope)
 		size := data.Len()
 		// let's create an array of maps that's going to hold the results
-		res := make([]map[string]interface{}, size)
+		res := make([]map[string]any, size)
 		// iterating the original array
 		for i := 0; i < size; i++ {
 			item := data.Index(i).Interface()
 			// all elements have to be maps
 			if reflect.TypeOf(item).Kind() == reflect.Map {
 				// creating derivative element
-				block := map[string]interface{}{}
+				block := map[string]any{}
 				// for each parameter expressed in the arguments
 				for _, p := range params {
 					// if we find an attribute with that name
@@ -208,7 +210,7 @@ func extractParameters(signature string) []string {
 // The first return value will be `true` if a function was indeed found in expr and the execution of the function
 // was attempted. If the functions ran, the second return value will be the result of the function execution.
 // The third parameter is an error, in case the function failed
-func runFunction(expr string, data interface{}, functions *Functions) (bool, interface{}, error) {
+func runFunction(expr string, data any, functions *Functions) (bool, any, error) {
 	if fx := extractFunctionName(expr); fx != "" {
 		params := extractParameters(expr)
 		if function, ok := functions.mapOfFunctions[fx]; ok {
