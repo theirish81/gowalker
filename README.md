@@ -143,7 +143,9 @@ Here's an example of simple template splitting. It uses the `render` function ag
 ```go
 t1 := "this is a test ${items.render(t2)}"
 t2 := "T2 ${.}"
-res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+templates := NewTemplates()
+templates.Add("t2",t2)
+res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
 // prints:
 // `this is a test T2 ["foo","bar"]`
 }
@@ -155,7 +157,9 @@ And here's an example where we iterate over an array. It uses the `renderEach` f
 ```go
 t1 := "this is a test ${items.renderEach(t2,\\,)}"
 t2 := "\nT2 ${.}"
-res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+templates := NewTemplates()
+templates.Add("t2",t2)
+res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
 // prints:
 // this is a test
 // T2 foo

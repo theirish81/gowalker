@@ -61,7 +61,7 @@ func TestRenderWithFunctions(t *testing.T) {
 		t.Error("reflexive function not working")
 	}
 
-	if res, _ := Render("Splitting and printing ${foo.split(\\,)}", map[string]interface{}{"foo": "bar,dawg"}, functions); res != "Splitting and printing [\"bar\",\"dawg\"]" {
+	if res, _ := Render("Splitting and printing ${foo.split(\\,)}", map[string]any{"foo": "bar,dawg"}, functions); res != "Splitting and printing [\"bar\",\"dawg\"]" {
 		t.Error("error in running split function in template")
 	}
 }
@@ -79,9 +79,11 @@ func TestRenderAllRender(t *testing.T) {
 }
 
 func TestRenderAllRenderEach(t *testing.T) {
+	templates := NewSubTemplates()
+	templates.Add("t2", "\nT2 ${.}")
+
 	t1 := "this is a test ${items.renderEach(t2,\\,)}"
-	t2 := "\nT2 ${.}"
-	if res, _ := RenderAll(t1, map[string]string{"t2": t2}, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test \nT2 foo,\nT2 bar" {
+	if res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test \nT2 foo,\nT2 bar" {
 		t.Error("renderEach not working as expected")
 	}
 	if res, err := RenderAll(t1, nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test ${items.renderEach(t2,\\,)}" && err.Error() != "template not found" {

@@ -4,6 +4,18 @@ import (
 	"testing"
 )
 
+func TestRunFunction(t *testing.T) {
+	if found, data, err := runFunction("split(\\,)", "foo,bar", NewFunctions()); !found || err != nil || data.([]string)[0] != "foo" {
+		t.Error("something went wrong while running function")
+	}
+	if found, _, _ := runFunction("split(\\,", "foo,bar", NewFunctions()); found {
+		t.Error("a function was found where there was none")
+	}
+	if found, _, _ := runFunction("()", "foo,bar", NewFunctions()); found {
+		t.Error("a function was found where there was none")
+	}
+}
+
 func TestExtractFunctionName(t *testing.T) {
 	if extractFunctionName("foo(bar)") != "foo" {
 		t.Error("could not extract function name")
@@ -45,7 +57,7 @@ func TestSplitFunction(t *testing.T) {
 
 func TestCollectFunction(t *testing.T) {
 	res, _ := Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"foo": 4, "bar": 5, "gino": 6}}}, NewFunctions())
-	rx := res.([]map[string]interface{})
+	rx := res.([]map[string]any)
 	if len(rx) != 2 {
 		t.Error("did not return all items in array")
 	}
@@ -56,7 +68,7 @@ func TestCollectFunction(t *testing.T) {
 		t.Error("did not collect the right values")
 	}
 	res, _ = Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"bar": 5, "gino": 6}}}, NewFunctions())
-	rx = res.([]map[string]interface{})
+	rx = res.([]map[string]any)
 	if len(rx[0]) != 2 || len(rx[1]) != 1 {
 		t.Error("not the exact number of attributes on missing key")
 	}
