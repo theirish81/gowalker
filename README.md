@@ -1,4 +1,7 @@
 # GoWalker
+**Status:**
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/theirish81/gowalker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theirish81/gowalker/tree/main)
+
 GoWalker is two things:
 
 ## A simple path expression interpreter
