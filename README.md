@@ -53,15 +53,15 @@ From the expression parser standpoint, assertions work as follows:
 * you can chain functions, object and index selectors
 
 Examples:
-```
+```text
 foo.bar.size()
 ```
 Will evaluate the size of `bar`.
-```
+```text
 foo.myString.split(|)
 ```
 Will split `myString` using pipe as separator.
-```
+```text
 foo.myArray.collect(banana,mango)
 ```
 Where myArray is an array of objects, it will collect all the fields named `banana` and `mango`.
@@ -102,7 +102,7 @@ functions.Add("sayHello",func (scope any, params ...string) (any, error) {
 Walk("items[0].sayHello(Barney)",data,functions)
 ```
 will return:
-```
+```text
 hello foo from Barney
 ```
 
@@ -110,7 +110,7 @@ hello foo from Barney
 ## A simple template engine
 Powered by the same path expression interpreter, this tiny template engine allows you to substitute strings with
 data coming from a map. As in:
-```
+```text
 {
   "name": "${name}",
   "first_item": "${items[0]}",
