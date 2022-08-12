@@ -20,12 +20,9 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
 	// never know someone wants to do something with that nil
 	if data == nil {
-		if found, res, err := runFunction(expr, data, functions); err != nil {
+		found, res, err := runFunction(expr, data, functions)
+		if found || err != nil {
 			return res, err
-		} else {
-			if found {
-				return res, err
-			}
 		}
 		return data, nil
 	}
@@ -97,12 +94,9 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 		// if someone is trying to access a property in an array...
 		if len(expr) > 0 {
 			// we try to understand if it's one fo the available functions, as it's totally legit
-			if found, res, err := runFunction(expr, data, functions); err != nil {
+			found, res, err := runFunction(expr, data, functions)
+			if found || err != nil {
 				return res, err
-			} else {
-				if found {
-					return res, err
-				}
 			}
 			//... if it's not a function, they're probably doing something wrong
 			return nil, errors.New("cannot access attributes from an array")
@@ -144,9 +138,9 @@ func getSegments(expr string) (string, string) {
 	next := ""
 	if len(items) > 0 {
 		current = items[0]
-	}
-	if len(items) > 1 {
-		next = items[1]
+		if len(items) > 1 {
+			next = items[1]
+		}
 	}
 	return current, next
 }
@@ -179,11 +173,11 @@ func extractIndexes(expr string) (string, []int, error) {
 	// converting each found index to an integer and composing the final indexes array
 	indexes := make([]int, 0)
 	for _, bx := range bits {
-		index, err := strconv.Atoi(bx[1])
-		if err != nil {
+		if index, err := strconv.Atoi(bx[1]); err == nil {
+			indexes = append(indexes, index)
+		} else {
 			return partial, indexes, err
 		}
-		indexes = append(indexes, index)
 	}
 	// and return
 	return partial, indexes, nil
