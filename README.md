@@ -46,12 +46,11 @@ Expressions are actually pretty easy. A few notes:
 Expressions also support the use of functions.
 From the expression parser standpoint, assertions work as follows:
 * at any point of the expression you can invoke a function
-* the function call must be the last segment in an expression
-* function chaining is not supported yet
 * functions can be reflective and can only operate on the piece of data they've been called upon
 * functions can receive comma separated parameters. Quotation is not required as data typing will be handled by the
   function implementation
 * running a function without a preceding expression will make the function operate on the full scope
+* you can chain functions, object and index selectors
 
 Examples:
 ```
