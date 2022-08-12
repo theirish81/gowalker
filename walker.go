@@ -142,7 +142,7 @@ func getSegments(expr string) (string, string) {
 	return current, next
 }
 
-// sliceOneOff will take an array of indexes, take the head off, and return the resulting array
+// sliceOneOff will take an array of indexes, take the head off, and return the removed element and the remaining array
 func sliceOneOff(indexes []int) (int, []int) {
 	if len(indexes) == 1 {
 		return indexes[0], nil

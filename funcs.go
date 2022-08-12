@@ -211,14 +211,21 @@ func extractParameters(signature string) []string {
 // was attempted. If the functions ran, the second return value will be the result of the function execution.
 // The third parameter is an error, in case the function failed
 func runFunction(expr string, data any, functions *Functions) (bool, any, error) {
+	// Extracting the function name. If empty, then this is not a function call
 	if fx := extractFunctionName(expr); fx != "" {
+		// If it's a function call, though, we extract the parameters
 		params := extractParameters(expr)
+		// If the provided functions do contain the one being invoked...
 		if function, ok := functions.mapOfFunctions[fx]; ok {
+			// ... we can run it and return the result
 			res, err := function(data, params...)
 			return true, res, err
 		} else {
-			return true, expr, nil
+			// otherwise, we still report that the function was detected, but as it was not found, the function call
+			// is returned as value, so it can be printed.
+			return true, expr, errors.New("function not found")
 		}
 	}
+	// If no functions were found, we report back
 	return false, "", nil
 }
