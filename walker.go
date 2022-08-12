@@ -78,12 +78,9 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 		// if there's one or more index selectors
 		if indexes != nil || len(indexes) > 0 {
 			// we pick the first index in the array
-			nextIndex := indexes[0]
+			nextIndex, indexes := sliceOneOff(indexes)
 			// making sure that its value does not exceed the array size
-			if indexes[0] < t.Len() {
-				// popping the current index
-				indexes = sliceOneOff(indexes)
-
+			if nextIndex < t.Len() {
 				// we select the indexed item and move forward
 				return walkImpl(expr, t.Index(nextIndex).Interface(), indexes, functions)
 			} else {
@@ -146,13 +143,12 @@ func getSegments(expr string) (string, string) {
 }
 
 // sliceOneOff will take an array of indexes, take the head off, and return the resulting array
-func sliceOneOff(indexes []int) []int {
+func sliceOneOff(indexes []int) (int, []int) {
 	if len(indexes) == 1 {
-		indexes = nil
+		return indexes[0], nil
 	} else {
-		indexes = indexes[1:]
+		return indexes[0], indexes[1:]
 	}
-	return indexes
 }
 
 // extractIndexes tries to extract the index from an index notation. Will return the partial expression and an array
