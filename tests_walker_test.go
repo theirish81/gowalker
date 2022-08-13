@@ -86,3 +86,24 @@ func TestWalkWithFunctions(t *testing.T) {
 	}
 
 }
+
+func TestWalkWithChainedFunctionAndIndex(t *testing.T) {
+	functions := NewFunctions()
+	if res, _ := Walk("foo.split(|)[0]", map[string]string{"foo": "hello|world"}, functions); res != "hello" {
+		t.Error("basic function chaining not working")
+	}
+}
+
+func TestWalkWithChainedFunctions(t *testing.T) {
+	functions := NewFunctions()
+	if res, _ := Walk("foo.split(|).size()", map[string]string{"foo": "hello|world"}, functions); res != 2 {
+		t.Error("basic function chaining not working")
+	}
+
+}
+
+func TestWalkWithChainedIndexAndFunction(t *testing.T) {
+	if res, _ := Walk("arr[0].size()", map[string]any{"arr": []string{"foo", "bar"}}, NewFunctions()); res != 3 {
+		t.Error("basic function chaining not working")
+	}
+}
