@@ -1,48 +1,51 @@
 package gowalker
 
 import (
+	"context"
 	"testing"
 )
 
 func TestWalk(t *testing.T) {
-	if rx, _ := Walk("foo.double_foo", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, nil); rx != "bar" {
+	ctx := context.Background()
+	if rx, _ := Walk(ctx, "foo.double_foo", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, nil); rx != "bar" {
 		t.Error("basic map navigation failing")
 	}
-	if rx, _ := Walk("foo", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, nil); rx.(map[string]any)["double_foo"] != "bar" {
+	if rx, _ := Walk(ctx, "foo", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, nil); rx.(map[string]any)["double_foo"] != "bar" {
 		t.Error("addressing map as return value failed")
 	}
-	if rx, _ := Walk("foo[0]", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); rx != "bar1" {
+	if rx, _ := Walk(ctx, "foo[0]", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); rx != "bar1" {
 		t.Error("array navigation not working")
 	}
-	if _, err := Walk("foo[3]", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); err == nil {
+	if _, err := Walk(ctx, "foo[3]", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); err == nil {
 		t.Error("expression should index out of bounds")
 	}
-	if rx, _ := Walk("foo", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); rx.([]any)[0] != "bar1" {
+	if rx, _ := Walk(ctx, "foo", map[string]any{"foo": []any{"bar1", "bar2"}}, nil); rx.([]any)[0] != "bar1" {
 		t.Error("returning entire array not working")
 	}
-	if rx, _ := Walk("foo[0].gino", map[string]any{"foo": []any{map[string]any{"gino": "pino"}, "bar2"}}, nil); rx != "pino" {
+	if rx, _ := Walk(ctx, "foo[0].gino", map[string]any{"foo": []any{map[string]any{"gino": "pino"}, "bar2"}}, nil); rx != "pino" {
 		t.Error("navigating in object past array not working")
 	}
-	if _, err := Walk("foo.bananas", map[string]any{"foo": []any{map[string]any{"gino": "pino"}, "bar2"}}, nil); err == nil {
+	if _, err := Walk(ctx, "foo.bananas", map[string]any{"foo": []any{map[string]any{"gino": "pino"}, "bar2"}}, nil); err == nil {
 		t.Error("referencing an attribute in an array is not returning an error")
 	}
-	if rx, _ := Walk("foo[0][1]", map[string]any{"foo": []any{[]any{"foo", "bar"}}}, nil); rx != "bar" {
+	if rx, _ := Walk(ctx, "foo[0][1]", map[string]any{"foo": []any{[]any{"foo", "bar"}}}, nil); rx != "bar" {
 		t.Error("nested array selection fails")
 	}
-	if rx, _ := Walk("foo[0][1].foo", map[string]any{"foo": []any{[]any{"foo",
+	if rx, _ := Walk(ctx, "foo[0][1].foo", map[string]any{"foo": []any{[]any{"foo",
 		map[string]any{"foo": "bar"}}}}, nil); rx != "bar" {
 		t.Error("nested array selection with more digging into sub-object failed")
 	}
-	if res, _ := Walk("foo.dawg.bar", map[string]any{"foo": map[string]any{"bar": "dawg"}}, nil); res != nil {
+	if res, _ := Walk(ctx, "foo.dawg.bar", map[string]any{"foo": map[string]any{"bar": "dawg"}}, nil); res != nil {
 		t.Error("nil in the path broke something")
 	}
-	if res, _ := Walk("foo.bar", map[string]any{"foo": nil}, nil); res != nil {
+	if res, _ := Walk(ctx, "foo.bar", map[string]any{"foo": nil}, nil); res != nil {
 		t.Error("nil as legit value not working")
 	}
 }
 
 func TestWalkWithNestedTypes(t *testing.T) {
-	if rx, _ := Walk("foo.double_foo", map[string]map[string]string{"foo": {"double_foo": "bar"}}, nil); rx != "bar" {
+	ctx := context.Background()
+	if rx, _ := Walk(ctx, "foo.double_foo", map[string]map[string]string{"foo": {"double_foo": "bar"}}, nil); rx != "bar" {
 		t.Error("basic map navigation failing")
 	}
 }
@@ -66,44 +69,47 @@ func TestExtractIndex(t *testing.T) {
 }
 
 func TestWalkWithFunctions(t *testing.T) {
-
-	f0 := func(data any, params ...string) (any, error) {
+	ctx := context.Background()
+	f0 := func(ctx context.Context, data any, params ...string) (any, error) {
 		return "hello world", nil
 	}
-	f1 := func(data any, params ...string) (any, error) {
+	f1 := func(ctx context.Context, data any, params ...string) (any, error) {
 		return "I'm crazy: " + data.(map[string]any)["double_foo"].(string), nil
 	}
 	functions := NewFunctions()
 	functions.Add("hello", f0).Add("debug", f1)
-	if res, _ := Walk("hello()", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "hello world" {
+	if res, _ := Walk(ctx, "hello()", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "hello world" {
 		t.Error("basic function calling not working")
 	}
-	if res, _ := Walk("foo.debug(\"bananas\")", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "I'm crazy: bar" {
+	if res, _ := Walk(ctx, "foo.debug(\"bananas\")", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "I'm crazy: bar" {
 		t.Error("reflexive function calling not working")
 	}
-	if res, _ := Walk("dawg()", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "dawg()" {
+	if res, _ := Walk(ctx, "dawg()", map[string]any{"foo": map[string]any{"double_foo": "bar"}}, functions); res != "dawg()" {
 		t.Error("calling a function that does not exist not working")
 	}
 
 }
 
 func TestWalkWithChainedFunctionAndIndex(t *testing.T) {
+	ctx := context.Background()
 	functions := NewFunctions()
-	if res, _ := Walk("foo.split(|)[0]", map[string]string{"foo": "hello|world"}, functions); res != "hello" {
+	if res, _ := Walk(ctx, "foo.split(|)[0]", map[string]string{"foo": "hello|world"}, functions); res != "hello" {
 		t.Error("basic function chaining not working")
 	}
 }
 
 func TestWalkWithChainedFunctions(t *testing.T) {
+	ctx := context.Background()
 	functions := NewFunctions()
-	if res, _ := Walk("foo.split(|).size()", map[string]string{"foo": "hello|world"}, functions); res != 2 {
+	if res, _ := Walk(ctx, "foo.split(|).size()", map[string]string{"foo": "hello|world"}, functions); res != 2 {
 		t.Error("basic function chaining not working")
 	}
 
 }
 
 func TestWalkWithChainedIndexAndFunction(t *testing.T) {
-	if res, _ := Walk("arr[0].size()", map[string]any{"arr": []string{"foo", "bar"}}, NewFunctions()); res != 3 {
+	ctx := context.Background()
+	if res, _ := Walk(ctx, "arr[0].size()", map[string]any{"arr": []string{"foo", "bar"}}, NewFunctions()); res != 3 {
 		t.Error("basic function chaining not working")
 	}
 }

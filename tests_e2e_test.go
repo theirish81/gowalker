@@ -1,11 +1,13 @@
 package gowalker
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 )
 
 func TestFromJSON(t *testing.T) {
+	ctx := context.Background()
 	var scope map[string]any
 	_ = json.Unmarshal([]byte(`{
 								"id":"banana",
@@ -18,7 +20,7 @@ func TestFromJSON(t *testing.T) {
 									{ "gino":22, "pino":10, "cane":5}
 								]
 							}`), &scope)
-	if res, _ := Render(`{
+	if res, _ := Render(ctx, `{
 	"name":"${id}",
 	"availability": ${meta.counter},
 	"first_item": "${items[0]}",

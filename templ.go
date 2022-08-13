@@ -1,6 +1,7 @@
 package gowalker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -10,7 +11,7 @@ import (
 )
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
-func Render(template string, data any, functions *Functions) (string, error) {
+func Render(ctx context.Context, template string, data any, functions *Functions) (string, error) {
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
@@ -20,7 +21,7 @@ func Render(template string, data any, functions *Functions) (string, error) {
 		// expr is what's within the brackets
 		expr := item[1]
 		// let's walk the path for the expression against the provided data
-		if val, err := Walk(expr, data, functions); err == nil {
+		if val, err := Walk(ctx, expr, data, functions); err == nil {
 			// if the value is not nil...
 			if val != nil {
 				// then we replace the matcher with what we've found.
@@ -38,14 +39,14 @@ func Render(template string, data any, functions *Functions) (string, error) {
 }
 
 // RenderAll will render the provided templates, making subTemplates available for complex rendering
-func RenderAll(template string, subTemplates SubTemplates, data map[string]any, functions *Functions) (string, error) {
+func RenderAll(ctx context.Context, template string, subTemplates SubTemplates, data map[string]any, functions *Functions) (string, error) {
 	if subTemplates == nil {
 		subTemplates = NewSubTemplates()
 	}
 	for k, v := range subTemplates {
 		functions.functionScope["_"+k] = v
 	}
-	return Render(template, data, functions)
+	return Render(ctx, template, data, functions)
 }
 
 // convertData converts the provided data into a string for the template

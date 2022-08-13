@@ -1,17 +1,19 @@
 package gowalker
 
 import (
+	"context"
 	"testing"
 )
 
 func TestRunFunction(t *testing.T) {
-	if found, data, err := runFunction("split(\\,)", "foo,bar", NewFunctions()); !found || err != nil || data.([]string)[0] != "foo" {
+	ctx := context.Background()
+	if found, data, err := runFunction(ctx, "split(\\,)", "foo,bar", NewFunctions()); !found || err != nil || data.([]string)[0] != "foo" {
 		t.Error("something went wrong while running function")
 	}
-	if found, _, _ := runFunction("split(\\,", "foo,bar", NewFunctions()); found {
+	if found, _, _ := runFunction(ctx, "split(\\,", "foo,bar", NewFunctions()); found {
 		t.Error("a function was found where there was none")
 	}
-	if found, _, _ := runFunction("()", "foo,bar", NewFunctions()); found {
+	if found, _, _ := runFunction(ctx, "()", "foo,bar", NewFunctions()); found {
 		t.Error("a function was found where there was none")
 	}
 }
@@ -35,28 +37,31 @@ func TestExtractParameters(t *testing.T) {
 }
 
 func TestSizeFunction(t *testing.T) {
-	if res, _ := Walk("size()", map[string]string{"foo": "bar", "foo2": "bar2"}, NewFunctions()); res != 2 {
+	ctx := context.Background()
+	if res, _ := Walk(ctx, "size()", map[string]string{"foo": "bar", "foo2": "bar2"}, NewFunctions()); res != 2 {
 		t.Error("size on root object not working")
 	}
-	if res, _ := Walk("foo.size()", map[string]any{"foo": []int{1, 2, 3}}, NewFunctions()); res != 3 {
+	if res, _ := Walk(ctx, "foo.size()", map[string]any{"foo": []int{1, 2, 3}}, NewFunctions()); res != 3 {
 		t.Error("size on array not working")
 	}
-	if _, err := Walk("foo.size()", map[string]any{"foo": 22}, NewFunctions()); err == nil {
+	if _, err := Walk(ctx, "foo.size()", map[string]any{"foo": 22}, NewFunctions()); err == nil {
 		t.Error("error not reported for unsupported size")
 	}
-	if _, err := Walk("foo.size()", map[string]any{"foo": nil}, NewFunctions()); err == nil {
+	if _, err := Walk(ctx, "foo.size()", map[string]any{"foo": nil}, NewFunctions()); err == nil {
 		t.Error("error not reported for nil")
 	}
 }
 
 func TestSplitFunction(t *testing.T) {
-	if res, _ := Walk("foo.split(|)", map[string]string{"foo": "bar|bananas"}, NewFunctions()); res.([]string)[0] != "bar" {
+	ctx := context.Background()
+	if res, _ := Walk(ctx, "foo.split(|)", map[string]string{"foo": "bar|bananas"}, NewFunctions()); res.([]string)[0] != "bar" {
 		t.Error("split with pipe string not working")
 	}
 }
 
 func TestCollectFunction(t *testing.T) {
-	res, _ := Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"foo": 4, "bar": 5, "gino": 6}}}, NewFunctions())
+	ctx := context.Background()
+	res, _ := Walk(ctx, "foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"foo": 4, "bar": 5, "gino": 6}}}, NewFunctions())
 	rx := res.([]map[string]any)
 	if len(rx) != 2 {
 		t.Error("did not return all items in array")
@@ -67,7 +72,7 @@ func TestCollectFunction(t *testing.T) {
 	if rx[0]["foo"] != 1 || rx[1]["foo"] != 4 {
 		t.Error("did not collect the right values")
 	}
-	res, _ = Walk("foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"bar": 5, "gino": 6}}}, NewFunctions())
+	res, _ = Walk(ctx, "foo.collect(foo,bar)", map[string][]map[string]int{"foo": {{"foo": 1, "bar": 2, "gino": 3}, {"bar": 5, "gino": 6}}}, NewFunctions())
 	rx = res.([]map[string]any)
 	if len(rx[0]) != 2 || len(rx[1]) != 1 {
 		t.Error("not the exact number of attributes on missing key")

@@ -1,6 +1,7 @@
 package gowalker
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strconv"
@@ -8,19 +9,19 @@ import (
 )
 
 // Walk "walks" the provided data using the provided expression
-func Walk(expr string, data any, functions *Functions) (any, error) {
+func Walk(ctx context.Context, expr string, data any, functions *Functions) (any, error) {
 	if functions == nil {
 		functions = NewFunctions()
 	}
-	return walkImpl(expr, data, nil, functions)
+	return walkImpl(ctx, expr, data, nil, functions)
 }
 
 // walkImpl is the actual recursive implementation of the walker
-func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, error) {
+func walkImpl(ctx context.Context, expr string, data any, indexes []int, functions *Functions) (any, error) {
 	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
 	// never know someone wants to do something with that nil
 	if data == nil {
-		found, res, err := runFunction(expr, data, functions)
+		found, res, err := runFunction(ctx, expr, data, functions)
 		if found || err != nil {
 			return res, err
 		}
@@ -53,20 +54,20 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 				return data, err
 			}
 
-			if found, res, err := runFunction(partial, data, functions); err != nil {
+			if found, res, err := runFunction(ctx, partial, data, functions); err != nil {
 				return res, err
 			} else {
 				if found {
-					return walkImpl(next, res, indexes, functions)
+					return walkImpl(ctx, next, res, indexes, functions)
 				}
 			}
 
 			val := t.MapIndex(reflect.ValueOf(partial))
 			if val.IsValid() && !val.IsZero() {
 				// recursion passing the selected value
-				return walkImpl(next, t.MapIndex(reflect.ValueOf(partial)).Interface(), indexes, functions)
+				return walkImpl(ctx, next, t.MapIndex(reflect.ValueOf(partial)).Interface(), indexes, functions)
 			} else {
-				return walkImpl(next, nil, indexes, functions)
+				return walkImpl(ctx, next, nil, indexes, functions)
 			}
 		} else {
 			// we're not selecting anymore, we can return the value
@@ -82,7 +83,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 			// making sure that its value does not exceed the array size
 			if nextIndex < t.Len() {
 				// we select the indexed item and move forward
-				return walkImpl(expr, t.Index(nextIndex).Interface(), indexes, functions)
+				return walkImpl(ctx, expr, t.Index(nextIndex).Interface(), indexes, functions)
 			} else {
 				// if the index exceeds the array size, we return an out-of-bounds error
 				return t, errors.New("index out of bounds")
@@ -91,7 +92,7 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 		// if someone is trying to access a property in an array...
 		if len(expr) > 0 {
 			// we try to understand if it's one fo the available functions, as it's totally legit
-			found, res, err := runFunction(expr, data, functions)
+			found, res, err := runFunction(ctx, expr, data, functions)
 			if found || err != nil {
 				return res, err
 			}
@@ -114,11 +115,11 @@ func walkImpl(expr string, data any, indexes []int, functions *Functions) (any, 
 		}
 
 		// let's check if we need to run a function against it
-		if found, res, err := runFunction(partial, data, functions); err != nil {
+		if found, res, err := runFunction(ctx, partial, data, functions); err != nil {
 			return res, err
 		} else {
 			if found {
-				return walkImpl(next, res, indexes, functions)
+				return walkImpl(ctx, next, res, indexes, functions)
 			}
 		}
 		// otherwise, we just return the value
