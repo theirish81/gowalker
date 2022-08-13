@@ -127,3 +127,19 @@ func TestWalkerWithFunctionAndDeadline(t *testing.T) {
 		t.Error("deadline not working")
 	}
 }
+
+func TestWalkerWithFunctionAndCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	functions := NewFunctions()
+	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
+		time.Sleep(2 * time.Second)
+		return data, nil
+	})
+	go func() {
+		time.Sleep(1 * time.Second)
+		cancel()
+	}()
+	if _, err := Walk(ctx, "wait().foo", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
+		t.Error("cancellation not working")
+	}
+}

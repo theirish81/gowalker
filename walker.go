@@ -22,6 +22,9 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 	if deadlineMet(ctx) {
 		return nil, errors.New("deadline exceeded")
 	}
+	if hasCancelled(ctx) {
+		return nil, errors.New("cancelled")
+	}
 	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
 	// never know someone wants to do something with that nil
 	if data == nil {
@@ -189,4 +192,13 @@ func deadlineMet(ctx context.Context) bool {
 		return true
 	}
 	return false
+}
+
+func hasCancelled(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
 }

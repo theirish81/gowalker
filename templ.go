@@ -16,6 +16,9 @@ func Render(ctx context.Context, template string, data any, functions *Functions
 	if deadlineMet(ctx) {
 		return "", errors.New("deadline exceeded")
 	}
+	if hasCancelled(ctx) {
+		return "", errors.New("cancelled")
+	}
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...

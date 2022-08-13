@@ -29,10 +29,11 @@ Given a data structure like this:
 ```
 You can use the `Walk` function to easily navigate the data structure as in:
 ```go
-Walk("name",data,nil)               // returns `Joe`
-Walk("items[1]",data,nil)           // returns `wallet`
-Walk("friends[0].name",data,nil)    // returns `billy`
-Walk("items",data,nil)              // returns ["keys","wallet"]
+ctx := context.TODO()
+Walk(ctx, "name",data,nil)               // returns `Joe`
+Walk(ctx, "items[1]",data,nil)           // returns `wallet`
+Walk(ctx, "friends[0].name",data,nil)    // returns `billy`
+Walk(ctx, "items",data,nil)              // returns ["keys","wallet"]
 ```
 The library uses no code evaluations therefore it's super safe.
 
@@ -88,7 +89,7 @@ Assuming you have a data structure as follows:
 
 ```go
 functions := NewFunctions()
-functions.Add("sayHello",func (scope any, params ...string) (any, error) {
+functions.Add("sayHello",func (context context.Context, scope any, params ...string) (any, error) {
 	if len(params) < 1 {
 		return nil,errors.New("not enough parameters")
     }
@@ -99,7 +100,8 @@ functions.Add("sayHello",func (scope any, params ...string) (any, error) {
     }
 })
 //...
-Walk("items[0].sayHello(Barney)",data,functions)
+ctx := context.TODO()
+Walk(ctx, "items[0].sayHello(Barney)", data,functions)
 ```
 will return:
 ```text
@@ -128,7 +130,8 @@ templ := `{
     "first_item": "${items[0]}",
     "all_items": ${items}
 }`
-res, _ := Render(templ, data, nil)
+ctx := context.TODO()
+res, _ := Render(ctx, templ, data, nil)
 ```
 and you're set. You can, of course, pass a `Functions` instance as third parameter.
 
@@ -144,7 +147,8 @@ t1 := "this is a test ${items.render(t2)}"
 t2 := "T2 ${.}"
 templates := NewTemplates()
 templates.Add("t2",t2)
-res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+ctx := context.TODO()
+res, _ := RenderAll(ctx, t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
 // prints:
 // `this is a test T2 ["foo","bar"]`
 }
@@ -158,7 +162,8 @@ t1 := "this is a test ${items.renderEach(t2,\\,)}"
 t2 := "\nT2 ${.}"
 templates := NewTemplates()
 templates.Add("t2",t2)
-res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
+ctx := context.TODO()
+res, _ := RenderAll(ctx, t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions())
 // prints:
 // this is a test
 // T2 foo
@@ -166,4 +171,9 @@ res, _ := RenderAll(t1, templates, map[string]any{"items": []string{"foo", "bar"
 ```
 
 * `renderEach(templateName,sep?)`: renders a sub-template against each item of the array it was run against.
-  Additionally, you can provide an optional separator string that will be printed between an iteration and the next 
+  Additionally, you can provide an optional separator string that will be printed between an iteration and the next
+
+
+## Cancellation and deadlines
+As rendering large templates (or selecting complex paths) can be memory and CPU intensive, all functions now receive
+a context as first parameter, supporting both deadlines and cancellations.

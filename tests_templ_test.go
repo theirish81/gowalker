@@ -82,6 +82,22 @@ func TestRenderWithDeadline(t *testing.T) {
 	}
 }
 
+func TestRenderWithCancellaton(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.TODO())
+	functions := NewFunctions()
+	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
+		time.Sleep(2 * time.Second)
+		return data, nil
+	})
+	go func() {
+		time.Sleep(1 * time.Second)
+		cancel()
+	}()
+	if _, err := Render(ctx, "foo, ${wait()}, ${foo}", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
+		t.Error("cancellation not working")
+	}
+}
+
 func TestRenderAllRender(t *testing.T) {
 	ctx := context.Background()
 	t1 := "this is a test ${items.render(t2)}"
