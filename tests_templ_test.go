@@ -70,30 +70,48 @@ func TestRenderWithFunctions(t *testing.T) {
 }
 
 func TestRenderWithDeadline(t *testing.T) {
-	ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(1*time.Second))
+	ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(5*time.Millisecond))
 	defer cancel()
 	functions := NewFunctions()
 	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Millisecond)
 		return data, nil
 	})
+	// the Walker deadline will trigger
 	if _, err := Render(ctx, "foo, ${wait()}, ${foo}", map[string]string{"foo": "bar"}, functions); err.Error() != "deadline exceeded" {
 		t.Error("deadline not working")
 	}
+
+	ctx, cancel = context.WithDeadline(context.TODO(), time.Now().Add(5*time.Millisecond))
+	defer cancel()
+	time.Sleep(10 * time.Millisecond)
+	// the Render deadline will trigger
+	if _, err := Render(ctx, "foo", map[string]string{"foo": "bar"}, functions); err.Error() != "deadline exceeded" {
+		t.Error("deadline not working")
+	}
+
 }
 
-func TestRenderWithCancellaton(t *testing.T) {
+func TestRenderWithCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	functions := NewFunctions()
 	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Millisecond)
 		return data, nil
 	})
 	go func() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Millisecond)
 		cancel()
 	}()
+	// the Walker cancellation will trigger
 	if _, err := Render(ctx, "foo, ${wait()}, ${foo}", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
+		t.Error("cancellation not working")
+	}
+
+	ctx, cancel = context.WithCancel(context.TODO())
+	cancel()
+	// The Render cancellation will trigger
+	if _, err := Render(ctx, "foo", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
 		t.Error("cancellation not working")
 	}
 }

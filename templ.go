@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -62,14 +61,7 @@ func convertData(data any) string {
 	case reflect.Int:
 		return fmt.Sprintf("%d", data)
 	case reflect.Float64:
-		// JSON parsers may decide to always use float64 for any number. However, when printing as a string
-		// we need to make sure we're using the right rendering. So if a float is in fact an integer, we render
-		// it as an integer
-		rounded := math.Round(data.(float64))
-		if rounded == data.(float64) {
-			return convertData(int(rounded))
-		}
-		return fmt.Sprintf("%f", data)
+		return strconv.FormatFloat(data.(float64), 'f', -1, 64)
 	case reflect.Bool:
 		return strconv.FormatBool(data.(bool))
 	case reflect.Slice, reflect.Map:

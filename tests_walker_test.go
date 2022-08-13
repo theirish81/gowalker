@@ -42,6 +42,9 @@ func TestWalk(t *testing.T) {
 	if res, _ := Walk(ctx, "foo.bar", map[string]any{"foo": nil}, nil); res != nil {
 		t.Error("nil as legit value not working")
 	}
+	if res, _ := Walk(ctx, "", map[string]string{"foo": "bar"}, nil); res.(map[string]string)["foo"] != "bar" {
+		t.Error("empty selector not working")
+	}
 }
 
 func TestWalkWithNestedTypes(t *testing.T) {
@@ -52,19 +55,19 @@ func TestWalkWithNestedTypes(t *testing.T) {
 }
 
 func TestExtractIndex(t *testing.T) {
-	if partial, index, _ := extractIndexes("foo[0]"); partial != "foo" || index[0] != 0 {
+	if partial, index := extractIndexes("foo[0]"); partial != "foo" || index[0] != 0 {
 		t.Error("could not extract 1 digit index or partial")
 	}
-	if partial, index, _ := extractIndexes("foo[29]"); partial != "foo" || index[0] != 29 {
+	if partial, index := extractIndexes("foo[29]"); partial != "foo" || index[0] != 29 {
 		t.Error("could not extract 2 digits index or partial")
 	}
-	if partial, index, _ := extractIndexes("foo[]"); partial != "foo[]" || index != nil {
+	if partial, index := extractIndexes("foo[]"); partial != "foo[]" || index != nil {
 		t.Error("error parsing empty square brackets")
 	}
-	if partial, index, _ := extractIndexes("foo"); partial != "foo" || index != nil {
+	if partial, index := extractIndexes("foo"); partial != "foo" || index != nil {
 		t.Error("could not extract no index partial")
 	}
-	if partial, _, _ := extractIndexes("foo[bar]"); partial != "foo[bar]" {
+	if partial, _ := extractIndexes("foo[bar]"); partial != "foo[bar]" {
 		t.Error("an index with alpha characters should be parsed as a segment")
 	}
 }
@@ -116,11 +119,11 @@ func TestWalkWithChainedIndexAndFunction(t *testing.T) {
 }
 
 func TestWalkerWithFunctionAndDeadline(t *testing.T) {
-	ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(1*time.Second))
+	ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(5*time.Millisecond))
 	defer cancel()
 	functions := NewFunctions()
 	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Millisecond)
 		return data, nil
 	})
 	if _, err := Walk(ctx, "wait().foo", map[string]string{"foo": "bar"}, functions); err.Error() != "deadline exceeded" {
@@ -132,11 +135,11 @@ func TestWalkerWithFunctionAndCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	functions := NewFunctions()
 	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Millisecond)
 		return data, nil
 	})
 	go func() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Millisecond)
 		cancel()
 	}()
 	if _, err := Walk(ctx, "wait().foo", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
