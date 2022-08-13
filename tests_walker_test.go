@@ -3,6 +3,7 @@ package gowalker
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestWalk(t *testing.T) {
@@ -111,5 +112,18 @@ func TestWalkWithChainedIndexAndFunction(t *testing.T) {
 	ctx := context.Background()
 	if res, _ := Walk(ctx, "arr[0].size()", map[string]any{"arr": []string{"foo", "bar"}}, NewFunctions()); res != 3 {
 		t.Error("basic function chaining not working")
+	}
+}
+
+func TestWalkerWithFunctionAndDeadline(t *testing.T) {
+	ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(1*time.Second))
+	defer cancel()
+	functions := NewFunctions()
+	functions.Add("wait", func(ctx context.Context, data any, params ...string) (any, error) {
+		time.Sleep(2 * time.Second)
+		return data, nil
+	})
+	if _, err := Walk(ctx, "wait().foo", map[string]string{"foo": "bar"}, functions); err.Error() != "deadline exceeded" {
+		t.Error("deadline not working")
 	}
 }

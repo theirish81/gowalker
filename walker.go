@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Walk "walks" the provided data using the provided expression
@@ -18,6 +19,9 @@ func Walk(ctx context.Context, expr string, data any, functions *Functions) (any
 
 // walkImpl is the actual recursive implementation of the walker
 func walkImpl(ctx context.Context, expr string, data any, indexes []int, functions *Functions) (any, error) {
+	if deadlineMet(ctx) {
+		return nil, errors.New("deadline exceeded")
+	}
 	// if data is nil, then check if there's a function to run against it. This generally does not happen, but you
 	// never know someone wants to do something with that nil
 	if data == nil {
@@ -178,4 +182,11 @@ func extractIndexes(expr string) (string, []int, error) {
 	}
 	// and return
 	return partial, indexes, nil
+}
+
+func deadlineMet(ctx context.Context) bool {
+	if deadline, ok := ctx.Deadline(); ok && deadline.Before(time.Now()) {
+		return true
+	}
+	return false
 }

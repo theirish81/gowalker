@@ -3,6 +3,7 @@ package gowalker
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -12,6 +13,9 @@ import (
 
 // Render renders a template, using the provided map as scope. Will return the rendered template or an error
 func Render(ctx context.Context, template string, data any, functions *Functions) (string, error) {
+	if deadlineMet(ctx) {
+		return "", errors.New("deadline exceeded")
+	}
 	// let's first find all the template markers
 	items := templateFinderRegex.FindAllStringSubmatch(template, -1)
 	// for each marker...
