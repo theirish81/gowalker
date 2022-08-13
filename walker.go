@@ -54,12 +54,7 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 
 			// If the segment contains one or more indexing blocks for arrays, then we separate the selector and
 			//the indexes. If it doesn't contain indexes, then partial is still the correct selector, and indexes is null
-			partial, indexes, err := extractIndexes(current)
-
-			// if there was an error in the extraction of the indexes, then we return
-			if err != nil {
-				return data, err
-			}
+			partial, indexes := extractIndexes(current)
 
 			if found, res, err := runFunction(ctx, partial, data, functions); err != nil {
 				return res, err
@@ -114,12 +109,7 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 
 		// If the segment contains one or more indexing blocks for arrays, then we separate the selector and
 		//the indexes. If it doesn't contain indexes, then partial is still the correct selector, and indexes is null
-		partial, indexes, err := extractIndexes(current)
-
-		// if there was an error in the extraction of the indexes, then we return
-		if err != nil {
-			return data, err
-		}
+		partial, indexes := extractIndexes(current)
 
 		// let's check if we need to run a function against it
 		if found, res, err := runFunction(ctx, partial, data, functions); err != nil {
@@ -162,13 +152,13 @@ func sliceOneOff(indexes []int) (int, []int) {
 // extractIndexes tries to extract the index from an index notation. Will return the partial expression and an array
 // of indexes as separate return values. If no index was found, then the indexes will be nil. Indexes is an array
 // in case a user is selecting nested arrays, such as array[0][1]
-func extractIndexes(expr string) (string, []int, error) {
+func extractIndexes(expr string) (string, []int) {
 	// we find the indexing notation blocks
 	bits := indexExtractorRegex.FindAllStringSubmatch(expr, 100)
 	// no indexing notation block?
 	if bits == nil || len(bits) == 0 {
 		// then the expression has no indexing notation. We return the expression and -1
-		return expr, nil, nil
+		return expr, nil
 	}
 	// otherwise, we take care of removing the entire indexing notation from the string. We should be left with
 	// the expression alone
@@ -177,14 +167,13 @@ func extractIndexes(expr string) (string, []int, error) {
 	// converting each found index to an integer and composing the final indexes array
 	indexes := make([]int, 0)
 	for _, bx := range bits {
-		if index, err := strconv.Atoi(bx[1]); err == nil {
-			indexes = append(indexes, index)
-		} else {
-			return partial, indexes, err
-		}
+		// we discard the error because this is technically impossible to happen as the Regex already captured that
+		// to be an integer. If it wasn't, we wouldn't be here.
+		index, _ := strconv.Atoi(bx[1])
+		indexes = append(indexes, index)
 	}
 	// and return
-	return partial, indexes, nil
+	return partial, indexes
 }
 
 func deadlineMet(ctx context.Context) bool {
