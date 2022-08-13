@@ -8,7 +8,11 @@ jobs:
       - checkout
       - run:
           name: "Test"
-          command: "go test"
+          command: |
+             go test -coverprofile coverage.out
+             go tool cover -html=coverage.out -o coverage.html
+      - store_artifacts:
+          path: coverage.html
 workflows:
   test-workflow:
     jobs:
