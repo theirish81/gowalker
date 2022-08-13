@@ -57,6 +57,10 @@ func TestSplitFunction(t *testing.T) {
 	if res, _ := Walk(ctx, "foo.split(|)", map[string]string{"foo": "bar|bananas"}, NewFunctions()); res.([]string)[0] != "bar" {
 		t.Error("split with pipe string not working")
 	}
+
+	if _, err := Walk(ctx, "foo.split(|)", map[string]int{"foo": 22}, NewFunctions()); err == nil {
+		t.Error("split on non-string does not return an error")
+	}
 }
 
 func TestCollectFunction(t *testing.T) {
@@ -76,6 +80,13 @@ func TestCollectFunction(t *testing.T) {
 	rx = res.([]map[string]any)
 	if len(rx[0]) != 2 || len(rx[1]) != 1 {
 		t.Error("not the exact number of attributes on missing key")
+	}
+
+	if _, err := Walk(ctx, "foo.collect(foo,bar)", map[string]string{"foo": "bar"}, NewFunctions()); err == nil {
+		t.Error("did not return error in collect when selected element is not an array")
+	}
+	if _, err := Walk(ctx, "foo.collect(foo,bar)", map[string][]string{"foo": {"bar"}}, NewFunctions()); err == nil {
+		t.Error("did not return error in collect when child elements are not maps")
 	}
 
 }

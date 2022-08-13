@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -44,6 +45,14 @@ func TestWalk(t *testing.T) {
 	}
 	if res, _ := Walk(ctx, "", map[string]string{"foo": "bar"}, nil); res.(map[string]string)["foo"] != "bar" {
 		t.Error("empty selector not working")
+	}
+	if res, _ := Walk(ctx, ".foo", map[string]string{"foo": "bar"}, nil); res != "bar" {
+		fmt.Println(res)
+		t.Error("selector starting with dot does not work")
+	}
+	if res, _ := Walk(ctx, "foo.", map[string]string{"foo": "bar"}, nil); res != "bar" {
+		fmt.Println(res)
+		t.Error("selector starting with dot does not work")
 	}
 }
 

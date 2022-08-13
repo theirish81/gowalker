@@ -59,10 +59,6 @@ func (f *Functions) size(_ context.Context, scope any, _ ...string) (any, error)
 // split is one of the base functions for the user to invoke.
 // It splits a string into an array, given a separator
 func (f *Functions) split(_ context.Context, scope any, params ...string) (any, error) {
-	// returning an error if the separator param was not provided
-	if len(params) < 1 {
-		return nil, errors.New("separator not provided")
-	}
 	// if the scope is a string, then we can proceed with the split
 	if val, ok := scope.(string); ok {
 		return strings.Split(val, params[0]), nil
@@ -76,7 +72,7 @@ func (f *Functions) split(_ context.Context, scope any, params ...string) (any, 
 // sub-template
 func (f *Functions) render(ctx context.Context, scope any, params ...string) (any, error) {
 	// returning an error if the sub-template name was not provided
-	if len(params) < 1 {
+	if len(params) < 1 || len(params[0]) == 0 {
 		return nil, errors.New("template not provided")
 	}
 	// if the sub-template name is found, we can run Render against it

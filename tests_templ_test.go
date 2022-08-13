@@ -127,12 +127,17 @@ func TestRenderAllRender(t *testing.T) {
 	if res, err := RenderAll(ctx, t1, nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test ${items.render(t2)}" && err.Error() != "template not found" {
 		t.Error("missing sub-template wrong behavior")
 	}
+
+	if _, err := RenderAll(ctx, "${items.render()}", nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); err == nil {
+		t.Error("empty template name should return an error")
+	}
 }
 
 func TestRenderAllRenderEach(t *testing.T) {
 	ctx := context.Background()
 	templates := NewSubTemplates()
 	templates.Add("t2", "\nT2 ${.}")
+	templates.Add("t3", "${split(|)}")
 
 	t1 := "this is a test ${items.renderEach(t2,\\,)}"
 	if res, _ := RenderAll(ctx, t1, templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test \nT2 foo,\nT2 bar" {
@@ -140,5 +145,9 @@ func TestRenderAllRenderEach(t *testing.T) {
 	}
 	if res, err := RenderAll(ctx, t1, nil, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); res != "this is a test ${items.renderEach(t2,\\,)}" && err.Error() != "template not found" {
 		t.Error("missing sub-template wrong behavior")
+	}
+
+	if _, err := RenderAll(ctx, "${items.renderEach(t2)}", templates, map[string]any{"items": "foo"}, NewFunctions()); err == nil {
+		t.Error("not returning an error when renderEach is not applied to a slice")
 	}
 }

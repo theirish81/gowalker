@@ -72,8 +72,16 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 				return walkImpl(ctx, next, nil, indexes, functions)
 			}
 		} else {
-			// we're not selecting anymore, we can return the value
-			return current, nil
+			// Here we're in the case where current is an empty string...
+			// If it has a next, probably the expression starts with a dot, which is somewhat admissible
+			// pretty much like Go templates work
+			if next != "" {
+				return walkImpl(ctx, next, data, indexes, functions)
+			} else {
+				// otherwise, we return the data itself
+				return data, nil
+			}
+
 		}
 	// if it's a slice...
 	case reflect.Slice:
