@@ -28,6 +28,7 @@ func NewFunctions() *Functions {
 	fx.Add("collect", fx.collect)
 	fx.Add("render", fx.render)
 	fx.Add("renderEach", fx.renderEach)
+	fx.Add("functionsScope", fx.functionsScope)
 	return &fx
 }
 
@@ -82,6 +83,11 @@ func (f *Functions) render(ctx context.Context, scope any, params ...string) (an
 		// returning an error if the template was not found
 		return nil, errors.New("template not found")
 	}
+}
+
+// renderVar will render the provided path against functionScope
+func (f *Functions) functionsScope(_ context.Context, _ any, _ ...string) (any, error) {
+	return f.functionScope, nil
 }
 
 // renderEach will render a sub-template against each element in the provided scope, assuming it's an array.
@@ -172,6 +178,12 @@ func (f *Functions) collect(_ context.Context, scope any, params ...string) (any
 		// if the given scope is not even an array, then we return an error
 		return nil, errors.New("operation can only be applied to arrays of maps")
 	}
+}
+
+// GetScope returns the scope of the functions. When implementing new functions outside the Functions structure, you
+// may want to access these.
+func (f *Functions) GetScope() map[string]any {
+	return f.functionScope
 }
 
 // extractFunctionName will extract the function name from an expression. If the expression doesn't look like a function

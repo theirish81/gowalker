@@ -18,6 +18,13 @@ func TestRunFunction(t *testing.T) {
 	}
 }
 
+func TestPassDotToFunction(t *testing.T) {
+	ctx := context.Background()
+	if res, _ := Walk(ctx, "foo.split(.)", map[string]string{"foo": "bar.bar"}, NewFunctions()); len(res.([]string)) != 2 {
+		t.Error("passing a dot to a function breaks stuff")
+	}
+}
+
 func TestExtractFunctionName(t *testing.T) {
 	if extractFunctionName("foo(bar)") != "foo" {
 		t.Error("could not extract function name")
@@ -87,6 +94,15 @@ func TestCollectFunction(t *testing.T) {
 	}
 	if _, err := Walk(ctx, "foo.collect(foo,bar)", map[string][]string{"foo": {"bar"}}, NewFunctions()); err == nil {
 		t.Error("did not return error in collect when child elements are not maps")
+	}
+}
+
+func TestFunctionsScope(t *testing.T) {
+	ctx := context.Background()
+	fx := NewFunctions()
+	fx.GetScope()["foo"] = map[string]string{"dawg": "bar"}
+	if res, _ := Walk(ctx, "functionsScope().foo.dawg", map[string]any{}, fx); res != "bar" {
+		t.Error("renderVar not working")
 	}
 
 }

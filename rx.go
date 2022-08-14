@@ -1,6 +1,12 @@
 package gowalker
 
-import "regexp"
+import (
+	"github.com/dlclark/regexp2"
+	"regexp"
+)
+
+// exprSplitterRegex is a regex to properly split the expressions on dots
+var exprSplitterRegex = regexp2.MustCompile("\\.(?![^(]*\\))", regexp2.RE2)
 
 // templateFinderRegex will find the template markers in a string
 var templateFinderRegex, _ = regexp.Compile("\\$\\{(.*?)\\}")
