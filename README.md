@@ -1,8 +1,8 @@
 # GoWalker
 
-| Status | Test coverage |
-| ---------------------- |
-|[![CircleCI](https://dl.circleci.com/status-badge/img/gh/theirish81/gowalker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theirish81/gowalker/tree/main) | 97% |
+| Status                                                                                                                                                                                  | Test coverage |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theirish81/gowalker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theirish81/gowalker/tree/main)  | 97%           |
 
 GoWalker is two things:
 
