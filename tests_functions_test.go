@@ -102,7 +102,19 @@ func TestFunctionsScope(t *testing.T) {
 	fx := NewFunctions()
 	fx.GetScope()["foo"] = map[string]string{"dawg": "bar"}
 	if res, _ := Walk(ctx, "functionsScope().foo.dawg", map[string]any{}, fx); res != "bar" {
+		t.Error("functionsScope not working")
+	}
+}
+
+func TestRenderVar(t *testing.T) {
+	ctx := context.Background()
+	fx := NewFunctions()
+	fx.GetScope()["foo"] = map[string]string{"dawg": "bar"}
+	if res, _ := Walk(ctx, "renderVar(foo.dawg)", map[string]any{}, fx); res != "bar" {
 		t.Error("renderVar not working")
 	}
-
+	fx.GetScope()["foo"] = map[string][]string{"dawg": {"bar", "yay"}}
+	if res, _ := Walk(ctx, "renderVar(foo.dawg[1])", map[string]any{}, fx); res != "yay" {
+		t.Error("renderVar not working")
+	}
 }
