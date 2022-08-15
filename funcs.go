@@ -1,12 +1,13 @@
 package gowalker
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"strings"
 )
 
-type mapOfFunctions map[string]func(scope any, params ...string) (any, error)
+type mapOfFunctions map[string]func(ctx context.Context, scope any, params ...string) (any, error)
 
 // Functions is a map of actual Golang functions the expression can call.
 // When invoked, a function receives a variadic argument in which the first position is always the current selected
@@ -31,14 +32,14 @@ func NewFunctions() *Functions {
 }
 
 // Add adds a function ot the Functions' data structure
-func (f *Functions) Add(key string, function func(data any, params ...string) (any, error)) *Functions {
+func (f *Functions) Add(key string, function func(ctx context.Context, data any, params ...string) (any, error)) *Functions {
 	f.mapOfFunctions[key] = function
 	return f
 }
 
 // size is one of the base functions for the user to invoke.
 // It returns the size of maps, slices and strings
-func (f *Functions) size(scope any, _ ...string) (any, error) {
+func (f *Functions) size(_ context.Context, scope any, _ ...string) (any, error) {
 	// if scope is nil, then we return an error
 	if scope == nil {
 		return nil, errors.New("nil reference to size function")
@@ -57,11 +58,7 @@ func (f *Functions) size(scope any, _ ...string) (any, error) {
 
 // split is one of the base functions for the user to invoke.
 // It splits a string into an array, given a separator
-func (f *Functions) split(scope any, params ...string) (any, error) {
-	// returning an error if the separator param was not provided
-	if len(params) < 1 {
-		return nil, errors.New("separator not provided")
-	}
+func (f *Functions) split(_ context.Context, scope any, params ...string) (any, error) {
 	// if the scope is a string, then we can proceed with the split
 	if val, ok := scope.(string); ok {
 		return strings.Split(val, params[0]), nil
@@ -73,14 +70,14 @@ func (f *Functions) split(scope any, params ...string) (any, error) {
 
 // render will render a sub-template against the selected scope. It requires one param that is the name of the
 // sub-template
-func (f *Functions) render(scope any, params ...string) (any, error) {
+func (f *Functions) render(ctx context.Context, scope any, params ...string) (any, error) {
 	// returning an error if the sub-template name was not provided
-	if len(params) < 1 {
+	if len(params) < 1 || len(params[0]) == 0 {
 		return nil, errors.New("template not provided")
 	}
 	// if the sub-template name is found, we can run Render against it
 	if templ, ok := f.functionScope["_"+params[0]]; ok {
-		return Render(templ.(string), scope, f)
+		return Render(ctx, templ.(string), scope, f)
 	} else {
 		// returning an error if the template was not found
 		return nil, errors.New("template not found")
@@ -90,7 +87,7 @@ func (f *Functions) render(scope any, params ...string) (any, error) {
 // renderEach will render a sub-template against each element in the provided scope, assuming it's an array.
 // It requires one param that is the name of the sub-template. Additionally, it accepts a second param that is a
 // separator string to append at each iteration.
-func (f *Functions) renderEach(scope any, params ...string) (any, error) {
+func (f *Functions) renderEach(ctx context.Context, scope any, params ...string) (any, error) {
 	// if there are no params, it's an error
 	if len(params) < 1 {
 		return nil, errors.New("template not provided")
@@ -109,7 +106,7 @@ func (f *Functions) renderEach(scope any, params ...string) (any, error) {
 			// against each item in the slice
 			for i := 0; i < sliceVal.Len(); i++ {
 				// we render the sub-template
-				if tmp, err := Render(templ.(string), sliceVal.Index(i).Interface(), f); err == nil {
+				if tmp, err := Render(ctx, templ.(string), sliceVal.Index(i).Interface(), f); err == nil {
 					res = res + tmp
 					// if this is not the last item in the list, we print the separator character
 					if i < sliceVal.Len()-1 {
@@ -134,7 +131,7 @@ func (f *Functions) renderEach(scope any, params ...string) (any, error) {
 
 // collect expects an array of objects to be the scope. Params is a list of fields we're interested in.
 // The function will produce a derivative array of objects containing only the fields expressed in params
-func (f *Functions) collect(scope any, params ...string) (any, error) {
+func (f *Functions) collect(_ context.Context, scope any, params ...string) (any, error) {
 	// if no params are passed, then we return an error
 	if len(params) < 1 {
 		return nil, errors.New("list of fields not provided")
@@ -210,7 +207,7 @@ func extractParameters(signature string) []string {
 // The first return value will be `true` if a function was indeed found in expr and the execution of the function
 // was attempted. If the functions ran, the second return value will be the result of the function execution.
 // The third parameter is an error, in case the function failed
-func runFunction(expr string, data any, functions *Functions) (bool, any, error) {
+func runFunction(ctx context.Context, expr string, data any, functions *Functions) (bool, any, error) {
 	// Extracting the function name. If empty, then this is not a function call
 	if fx := extractFunctionName(expr); fx != "" {
 		// If it's a function call, though, we extract the parameters
@@ -218,7 +215,7 @@ func runFunction(expr string, data any, functions *Functions) (bool, any, error)
 		// If the provided functions do contain the one being invoked...
 		if function, ok := functions.mapOfFunctions[fx]; ok {
 			// ... we can run it and return the result
-			res, err := function(data, params...)
+			res, err := function(ctx, data, params...)
 			return true, res, err
 		} else {
 			// otherwise, we still report that the function was detected, but as it was not found, the function call
