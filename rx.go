@@ -18,4 +18,4 @@ var indexExtractorRegex, _ = regexp.Compile("\\[([0-9]+)\\]")
 var functionExtractorRegex, _ = regexp.Compile("(^.+)(\\((.*)\\))$")
 
 // paramExtractRegex will try to collect and split parameters from a comma separated list of values
-var paramExtractRegex, _ = regexp.Compile("([a-zA-Z0-9|\\/;:\\.\"]|(\\\\,?)*)*")
+var paramExtractRegex, _ = regexp.Compile("([a-zA-Z0-9\\$\\?_\\-\\!|\\/;:\\.\"]|(\\\\,?)*)*")
