@@ -5,7 +5,6 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -136,15 +135,13 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 // The first returned value is the "current" segment being evaluated, while the second is the "remaining part" of the
 // expression. In absence of a current element or a remaining part, empty strings will be returned
 func getSegments(expr string) (string, string) {
-	items := strings.SplitN(expr, ".", 2)
-	current := ""
-	next := ""
-	if len(items) > 0 {
-		current = items[0]
-		if len(items) > 1 {
-			next = items[1]
-		}
+	mx, err := exprSplitterRegex.FindStringMatch(expr)
+	if err != nil || mx == nil {
+		return expr, ""
 	}
+	idx := mx.Index
+	current := expr[0:idx]
+	next := expr[idx+1:]
 	return current, next
 }
 
