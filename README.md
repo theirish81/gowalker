@@ -4,8 +4,7 @@
 
 GoWalker is two things:
 
-## A simple path expression interpreter
-A very simple data expression interpreter.
+## A data path expression interpreter
 Given a data structure like this:
 ```json
 {
@@ -27,7 +26,8 @@ Given a data structure like this:
   ]
 }
 ```
-You can use the `Walk` function to easily navigate the data structure as in:
+You can use the `Walk` function to easily navigate the data structure, by providing a string that represents the path
+to the data, as in:
 ```go
 ctx := context.TODO()
 Walk(ctx, "name",data,nil)               // returns `Joe`
@@ -40,14 +40,14 @@ The library uses no code evaluations therefore it's super safe.
 ### Expressions
 Expressions are actually pretty easy. A few notes:
 * the path separator through maps is the `.` (dot). No square-bracket notation is supported or required
-* The index expression in arrays uses the square-bracket notation
+* The index expression in arrays uses the square-bracket (`[n]`) notation
 * the `.` (dot) alone in an expression refers to the whole scope
 
 ### Functions
 Expressions also support the use of functions.
 From the expression parser standpoint, assertions work as follows:
 * at any point of the expression you can invoke a function
-* functions can be reflective and can only operate on the piece of data they've been called upon
+* functions can be reflexive and can only operate on the piece of data they've been called upon
 * functions can receive comma separated parameters. Quotation is not required as data typing will be handled by the
   function implementation
 * running a function without a preceding expression will make the function operate on the full scope
@@ -73,6 +73,7 @@ The engine comes with just a few of default functions for demonstration purposes
 * `split(sep)`: splits the string in scope, using a separator
 * `collect(...)`: given an array containing maps, it will return an array of maps in which the maps only show the
   provided keys
+* `toVar(varName)`: will return a variable from the *Functions extra variables* and ignore the provided data 
 
 You can implement more by passing the `functions` parameter when invoking `Walk`.
 Example:
@@ -108,6 +109,16 @@ will return:
 hello foo from Barney
 ```
 
+### Functions extra variables
+Functions can also access another map of variables, unrelated to the data they're evaluating. This may be useful if
+your custom functions need to interact with other pieces of information beyond the data itself, such as request params.
+This map of variables can be accessed by invoking `getScope()` in a `Functions` instance.
+
+If, for example, you wanted to add a variable to the scope, you could simply:
+```go
+functions := NewFunctions()
+functions.GetScope()["foo"] = "bar"
+```
 
 ## A simple template engine
 Powered by the same path expression interpreter, this tiny template engine allows you to substitute strings with

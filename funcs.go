@@ -28,8 +28,7 @@ func NewFunctions() *Functions {
 	fx.Add("collect", fx.collect)
 	fx.Add("render", fx.render)
 	fx.Add("renderEach", fx.renderEach)
-	fx.Add("functionsScope", fx.functionsScope)
-	fx.Add("renderVar", fx.renderVar)
+	fx.Add("toVar", fx.toVar)
 	return &fx
 }
 
@@ -86,12 +85,8 @@ func (f *Functions) render(ctx context.Context, scope any, params ...string) (an
 	}
 }
 
-// renderVar will render the provided path against functionScope
-func (f *Functions) functionsScope(_ context.Context, _ any, _ ...string) (any, error) {
-	return f.functionScope, nil
-}
-
-func (f *Functions) renderVar(ctx context.Context, _ any, params ...string) (any, error) {
+// toVar will return a variable from the functionScope
+func (f *Functions) toVar(ctx context.Context, _ any, params ...string) (any, error) {
 	return Walk(ctx, params[0], f.functionScope, f)
 }
 
