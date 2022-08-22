@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -153,5 +154,60 @@ func TestWalkerWithFunctionAndCancellation(t *testing.T) {
 	}()
 	if _, err := Walk(ctx, "wait().foo", map[string]string{"foo": "bar"}, functions); err.Error() != "cancelled" {
 		t.Error("cancellation not working")
+	}
+}
+
+type S struct {
+	privateString string
+	PublicString  string
+	StringSlice   []string
+	StructSlice   []S
+	PointerString *string
+	PointerStruct *S
+}
+
+func TestWalkerWithStructs(t *testing.T) {
+	str := "bananas"
+	pStr := &str
+	s := S{privateString: "foobar",
+		PublicString:  "foobar",
+		StringSlice:   []string{"foo", "bar"},
+		StructSlice:   []S{{PublicString: "yay"}},
+		PointerString: pStr,
+		PointerStruct: &S{PublicString: "bananas"},
+	}
+	if _, err := Walk(context.TODO(), "s.privateString", map[string]any{"s": s}, nil); err == nil {
+		t.Error("accessing private field should return an error")
+	}
+	if res, _ := Walk(context.TODO(), "s.PublicString", map[string]any{"s": s}, nil); res != "foobar" {
+		t.Error("public string should be accessible")
+	}
+	if res, _ := Walk(context.TODO(), "s.StringSlice[0]", map[string]any{"s": s}, nil); res != "foo" {
+		t.Error("struct with index not working")
+	}
+	if res, _ := Walk(context.TODO(), "s.StructSlice[0].PublicString", map[string]any{"s": s}, nil); res != "yay" {
+		t.Error("struct with index not working")
+	}
+	if res, _ := Walk(context.TODO(), "s.PointerString", map[string]any{"s": s}, nil); res != "bananas" {
+		t.Error("pointer string not working")
+	}
+	if res, _ := Walk(context.TODO(), "s.PointerStruct.PublicString", map[string]any{"s": s}, nil); res != "bananas" {
+		t.Error("pointer struct not working ")
+	}
+	s.PointerStruct = nil
+	if res, _ := Walk(context.TODO(), "s.PointerStruct.PublicString", map[string]any{"s": s}, nil); res != nil {
+		t.Error("nil pointer struct not working")
+	}
+	if res, _ := Walk(context.TODO(), "s", map[string]any{"s": s}, nil); res.(S).PublicString != "foobar" {
+		t.Error("cannot reference struct directly")
+	}
+
+	functions := NewFunctions()
+	functions.Add("toJSON", func(ctx context.Context, data any, params ...string) (any, error) {
+		bytes, err := json.Marshal(data)
+		return string(bytes), err
+	})
+	if res, _ := Walk(context.TODO(), "s.StructSlice[0].toJSON()", map[string]any{"s": s}, functions); res != "{\"PublicString\":\"yay\",\"StringSlice\":null,\"StructSlice\":null,\"PointerString\":null,\"PointerStruct\":null}" {
+		t.Error("function invocation did not work")
 	}
 }

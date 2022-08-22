@@ -110,6 +110,35 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 		}
 		// if this has no index, it means the user wants to return the entire array
 		return t.Interface(), nil
+	case reflect.Struct:
+		if expr == "" {
+			return data, nil
+		}
+		t := reflect.ValueOf(data)
+		current, next := getSegments(expr)
+
+		// If the segment contains one or more indexing blocks for arrays, then we separate the selector and
+		//the indexes. If it doesn't contain indexes, then partial is still the correct selector, and indexes is null
+		partial, indexes := extractIndexes(current)
+
+		if found, res, err := runFunction(ctx, partial, data, functions); err != nil {
+			return res, err
+		} else {
+			if found {
+				return walkImpl(ctx, next, res, indexes, functions)
+			}
+		}
+
+		field := t.FieldByName(partial)
+
+		if field.IsValid() && !field.IsZero() && field.CanInterface() {
+			return walkImpl(ctx, next, field.Interface(), indexes, functions)
+		} else {
+			return nil, errors.New("cannot access private field")
+		}
+	case reflect.Pointer:
+		t := reflect.ValueOf(data)
+		return walkImpl(ctx, expr, t.Elem().Interface(), indexes, functions)
 	// all other data types
 	default:
 		current, next := getSegments(expr)
