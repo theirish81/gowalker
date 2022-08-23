@@ -46,6 +46,12 @@ Expressions are actually pretty easy. A few notes:
 * The index expression in arrays uses the square-bracket (`[n]`) notation
 * the `.` (dot) alone in an expression refers to the whole scope
 
+**Maps** and **slices** are obviously supported.
+
+**Structs** can be traversed as well, as long as you're selecting public members (starting with a capital letter).
+You cannot, however, invoke the methods which may be available in the structs.
+
+
 ### Functions
 Expressions also support the use of functions.
 From the expression parser standpoint, assertions work as follows:
