@@ -64,7 +64,7 @@ func convertData(data any) string {
 		return strconv.FormatFloat(data.(float64), 'f', -1, 64)
 	case reflect.Bool:
 		return strconv.FormatBool(data.(bool))
-	case reflect.Slice, reflect.Map:
+	case reflect.Slice, reflect.Map, reflect.Struct:
 		// Slices and maps are rendered as JSON
 		d, _ := json.Marshal(data)
 		return string(d)
