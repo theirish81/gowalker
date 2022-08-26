@@ -45,7 +45,7 @@ func Render(ctx context.Context, template string, data any, functions *Functions
 }
 
 // RenderAll will render the provided templates, making subTemplates available for complex rendering
-func RenderAll(ctx context.Context, template string, subTemplates SubTemplates, data map[string]any, functions *Functions) (string, error) {
+func RenderAll(ctx context.Context, template string, subTemplates SubTemplates, data any, functions *Functions) (string, error) {
 	if subTemplates == nil {
 		subTemplates = NewSubTemplates()
 	}
