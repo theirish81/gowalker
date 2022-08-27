@@ -211,3 +211,19 @@ func TestWalkerWithStructs(t *testing.T) {
 		t.Error("function invocation did not work")
 	}
 }
+
+func TestWalkWithNilReference(t *testing.T) {
+	type S struct {
+		Foo *string
+		foo string
+	}
+	s := S{nil, "bar"}
+	if res, err := Walk(context.TODO(), "Foo", s, nil); res != nil || err != nil {
+		t.Error("both result and error should be nil when referencing nil")
+	}
+
+	// double-checking that this change does not break error reporting on private fields
+	if _, err := Walk(context.TODO(), "foo", s, nil); err == nil {
+		t.Error("access to a private field should return an error")
+	}
+}
