@@ -130,7 +130,9 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 		}
 
 		field := t.FieldByName(partial)
-
+		if field.Kind() == reflect.Ptr && field.IsNil() {
+			return nil, nil
+		}
 		if field.IsValid() && !field.IsZero() && field.CanInterface() {
 			return walkImpl(ctx, next, field.Interface(), indexes, functions)
 		} else {
