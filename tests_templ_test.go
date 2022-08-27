@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 )
@@ -149,5 +150,17 @@ func TestRenderAllRenderEach(t *testing.T) {
 
 	if _, err := RenderAll(ctx, "${items.renderEach(t2)}", templates, map[string]any{"items": "foo"}, NewFunctions()); err == nil {
 		t.Error("not returning an error when renderEach is not applied to a slice")
+	}
+}
+
+func TestRenderAllRenderEachWithMap(t *testing.T) {
+	ctx := context.Background()
+	templates := NewSubTemplates()
+	templates.Add("t2", "\nT2 ${key} = ${value}")
+
+	t1 := "this is a test ${items.renderEach(t2,\\,)}"
+	if res, _ := RenderAll(ctx, t1, templates, map[string]map[string]string{"items": {"foo": "bar", "go": "lang"}}, NewFunctions()); res != "this is a test \nT2 foo = bar,\nT2 go = lang" {
+		fmt.Println(res)
+		t.Error("cannot iterate maps")
 	}
 }

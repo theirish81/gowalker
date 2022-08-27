@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
@@ -29,6 +30,7 @@ func NewFunctions() *Functions {
 	fx.Add("render", fx.render)
 	fx.Add("renderEach", fx.renderEach)
 	fx.Add("toVar", fx.toVar)
+	fx.Add("jsonEscape", fx.jsonEscape)
 	return &fx
 }
 
@@ -85,6 +87,16 @@ func (f *Functions) render(ctx context.Context, scope any, params ...string) (an
 	}
 }
 
+func (f *Functions) jsonEscape(_ context.Context, scope any, _ ...string) (any, error) {
+	if reflect.TypeOf(scope).Kind() == reflect.String {
+		data, err := json.Marshal(scope)
+		dataString := string(data)
+		return dataString[1 : len(dataString)-1], err
+	}
+	return scope, errors.New("cannot JSON-escape a data type that is not a string")
+
+}
+
 // toVar will return a variable from the functionScope
 func (f *Functions) toVar(ctx context.Context, _ any, params ...string) (any, error) {
 	return Walk(ctx, params[0], f.functionScope, f)
@@ -106,7 +118,8 @@ func (f *Functions) renderEach(ctx context.Context, scope any, params ...string)
 	// if the sub-template exists
 	if templ, ok := f.functionScope["_"+params[0]]; ok {
 		// and the scope is a slice
-		if reflect.TypeOf(scope).Kind() == reflect.Slice {
+		switch reflect.TypeOf(scope).Kind() {
+		case reflect.Slice:
 			sliceVal := reflect.ValueOf(scope)
 			res := ""
 			// against each item in the slice
@@ -125,7 +138,28 @@ func (f *Functions) renderEach(ctx context.Context, scope any, params ...string)
 			}
 			// returning the collected strings
 			return res, nil
-		} else {
+		case reflect.Map:
+			mapVal := reflect.ValueOf(scope)
+			res := ""
+			keysVal := mapVal.MapKeys()
+			for i := 0; i < len(keysVal); i++ {
+				key := keysVal[i].Interface()
+				val := mapVal.MapIndex(keysVal[i]).Interface()
+				scope := map[any]any{"key": key, "value": val}
+				if tmp, err := Render(ctx, templ.(string), scope, f); err == nil {
+					res = res + tmp
+					// if this is not the last item in the list, we print the separator character
+					if i < len(keysVal)-1 {
+						res += sep
+					}
+				} else {
+					// returning an error if Render failed
+					return nil, err
+				}
+			}
+			// returning the collected strings
+			return res, nil
+		default:
 			// returning an error if the data type of the scope was not a slice
 			return nil, errors.New("cannot iterate on a data type that is not an array")
 		}
