@@ -159,7 +159,7 @@ func TestRenderAllRenderEachWithMap(t *testing.T) {
 	templates.Add("t2", "\nT2 ${key} = ${value}")
 
 	t1 := "this is a test ${items.renderEach(t2,\\,)}"
-	if res, _ := RenderAll(ctx, t1, templates, map[string]map[string]string{"items": {"foo": "bar", "go": "lang"}}, NewFunctions()); res != "this is a test \nT2 foo = bar,\nT2 go = lang" {
+	if res, _ := RenderAll(ctx, t1, templates, map[string]map[string]string{"items": {"foo": "bar", "go": "lang"}}, NewFunctions()); !(res == "this is a test \nT2 foo = bar,\nT2 go = lang" || res == "this is a test \nT2 go = lang,\nT2 foo = bar") {
 		fmt.Println(res)
 		t.Error("cannot iterate maps")
 	}
