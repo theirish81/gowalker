@@ -133,7 +133,7 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 		if field.Kind() == reflect.Ptr && field.IsNil() {
 			return nil, nil
 		}
-		if field.IsValid() && !field.IsZero() && field.CanInterface() {
+		if field.IsValid() && field.CanInterface() {
 			return walkImpl(ctx, next, field.Interface(), indexes, functions)
 		} else {
 			return nil, errors.New("cannot access private field")
