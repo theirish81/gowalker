@@ -82,7 +82,8 @@ The engine comes with just a few of default functions for demonstration purposes
 * `split(sep)`: splits the string in scope, using a separator
 * `collect(...)`: given an array containing maps, it will return an array of maps in which the maps only show the
   provided keys
-* `toVar(varName)`: will return a variable from the *Functions extra variables* and ignore the provided data 
+* `toVar(varName)`: will return a variable from the *Functions extra variables* and ignore the provided data
+* `toString()`: will return the string version of the variable in the scope
 
 You can implement more by passing the `functions` parameter when invoking `Walk`.
 Example:
