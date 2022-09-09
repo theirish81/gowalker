@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"reflect"
 	"testing"
 )
 
@@ -107,5 +108,12 @@ func TestToVar(t *testing.T) {
 	fx.GetScope()["foo"] = map[string][]string{"dawg": {"bar", "yay"}}
 	if res, _ := Walk(ctx, "toVar(foo.dawg[1])", map[string]any{}, fx); res != "yay" {
 		t.Error("renderVar not working")
+	}
+}
+
+func TestToString(t *testing.T) {
+	data, _ := Walk(context.Background(), "foo.bar.toString()", map[string]map[string]any{"foo": {"bar": 2}}, nil)
+	if reflect.ValueOf(data).Kind().String() != "string" {
+		t.Error("toString is not working as expected")
 	}
 }
