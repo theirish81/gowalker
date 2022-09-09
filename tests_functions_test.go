@@ -131,4 +131,17 @@ func TestEq(t *testing.T) {
 	if data == true {
 		t.Error("negative equality did not work")
 	}
+	if _, err := Walk(context.Background(), "foo.eq()", map[string]string{"foo": "bar"}, nil); err == nil {
+		t.Error("empty parameter should return an error")
+	}
+}
+
+func TestJsonEscape(t *testing.T) {
+	f := NewFunctions()
+	if res, _ := f.jsonEscape(context.Background(), "foo\""); res != "foo\\\"" {
+		t.Error("could not json escape a string")
+	}
+	if _, err := f.jsonEscape(context.Background(), 22); err == nil {
+		t.Error("json escape of a non string should return an error")
+	}
 }

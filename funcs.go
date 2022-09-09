@@ -265,6 +265,9 @@ func extractParameters(signature string) []string {
 	for i, p := range params {
 		params[i] = strings.ReplaceAll(p, "\\,", ",")
 	}
+	if len(params) == 1 && params[0] == "" {
+		return make([]string, 0)
+	}
 	return params
 }
 
