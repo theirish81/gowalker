@@ -2,11 +2,7 @@ package gowalker
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -32,7 +28,7 @@ func Render(ctx context.Context, template string, data any, functions *Functions
 			if val != nil {
 				// then we replace the matcher with what we've found.
 				// If the value is nil, this won't happen and the matcher will be left untouched
-				template = strings.Replace(template, matcher, convertData(val), 1)
+				template = strings.Replace(template, matcher, convertDataToString(val), 1)
 			}
 
 		} else {
@@ -53,21 +49,4 @@ func RenderAll(ctx context.Context, template string, subTemplates SubTemplates, 
 		functions.functionScope["_"+k] = v
 	}
 	return Render(ctx, template, data, functions)
-}
-
-// convertData converts the provided data into a string for the template
-func convertData(data any) string {
-	switch reflect.TypeOf(data).Kind() {
-	case reflect.Int:
-		return fmt.Sprintf("%d", data)
-	case reflect.Float64:
-		return strconv.FormatFloat(data.(float64), 'f', -1, 64)
-	case reflect.Bool:
-		return strconv.FormatBool(data.(bool))
-	case reflect.Slice, reflect.Map, reflect.Struct:
-		// Slices and maps are rendered as JSON
-		d, _ := json.Marshal(data)
-		return string(d)
-	}
-	return data.(string)
 }

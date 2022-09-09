@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"context"
+	"reflect"
 	"testing"
 )
 
@@ -107,5 +108,40 @@ func TestToVar(t *testing.T) {
 	fx.GetScope()["foo"] = map[string][]string{"dawg": {"bar", "yay"}}
 	if res, _ := Walk(ctx, "toVar(foo.dawg[1])", map[string]any{}, fx); res != "yay" {
 		t.Error("renderVar not working")
+	}
+}
+
+func TestToString(t *testing.T) {
+	data, _ := Walk(context.Background(), "foo.bar.toString()", map[string]map[string]any{"foo": {"bar": 2}}, nil)
+	if reflect.ValueOf(data).Kind().String() != "string" {
+		t.Error("toString is not working as expected")
+	}
+}
+
+func TestEq(t *testing.T) {
+	data, _ := Walk(context.Background(), "foo.bar.eq(22)", map[string]map[string]any{"foo": {"bar": 22}}, nil)
+	if data == false {
+		t.Error("positive equality did not work")
+	}
+	data, _ = Walk(context.Background(), "foo.bar.eq(22)", map[string]map[string]any{"foo": {"bar": true}}, nil)
+	if data == true {
+		t.Error("negative equality did not work")
+	}
+	data, _ = Walk(context.Background(), "foo.eq(22)", map[string]map[string]any{"foo": {"bar": true}}, nil)
+	if data == true {
+		t.Error("negative equality did not work")
+	}
+	if _, err := Walk(context.Background(), "foo.eq()", map[string]string{"foo": "bar"}, nil); err == nil {
+		t.Error("empty parameter should return an error")
+	}
+}
+
+func TestJsonEscape(t *testing.T) {
+	f := NewFunctions()
+	if res, _ := f.jsonEscape(context.Background(), "foo\""); res != "foo\\\"" {
+		t.Error("could not json escape a string")
+	}
+	if _, err := f.jsonEscape(context.Background(), 22); err == nil {
+		t.Error("json escape of a non string should return an error")
 	}
 }

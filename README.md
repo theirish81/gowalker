@@ -2,7 +2,7 @@
 
 | Status                                                                                                                                                                                  | Test coverage |
 |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
-| [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theirish81/gowalker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theirish81/gowalker/tree/main)  | 97%           |
+| [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theirish81/gowalker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theirish81/gowalker/tree/main)  | 97.1%         |
 
 GoWalker is two things:
 
@@ -82,7 +82,8 @@ The engine comes with just a few of default functions for demonstration purposes
 * `split(sep)`: splits the string in scope, using a separator
 * `collect(...)`: given an array containing maps, it will return an array of maps in which the maps only show the
   provided keys
-* `toVar(varName)`: will return a variable from the *Functions extra variables* and ignore the provided data 
+* `toVar(varName)`: will return a variable from the *Functions extra variables* and ignore the provided data
+* `toString()`: will return the string version of the variable in the scope
 
 You can implement more by passing the `functions` parameter when invoking `Walk`.
 Example:
