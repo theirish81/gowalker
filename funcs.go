@@ -31,6 +31,7 @@ func NewFunctions() *Functions {
 	fx.Add("renderEach", fx.renderEach)
 	fx.Add("toVar", fx.toVar)
 	fx.Add("jsonEscape", fx.jsonEscape)
+	fx.Add("toString", fx.toString)
 	return &fx
 }
 
@@ -212,6 +213,10 @@ func (f *Functions) collect(_ context.Context, scope any, params ...string) (any
 		// if the given scope is not even an array, then we return an error
 		return nil, errors.New("operation can only be applied to arrays of maps")
 	}
+}
+
+func (f *Functions) toString(_ context.Context, scope any, _ ...string) (any, error) {
+	return convertData(scope), nil
 }
 
 // GetScope returns the scope of the functions. When implementing new functions outside the Functions structure, you
