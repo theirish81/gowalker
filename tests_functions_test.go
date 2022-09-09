@@ -117,3 +117,18 @@ func TestToString(t *testing.T) {
 		t.Error("toString is not working as expected")
 	}
 }
+
+func TestEq(t *testing.T) {
+	data, _ := Walk(context.Background(), "foo.bar.eq(22)", map[string]map[string]any{"foo": {"bar": 22}}, nil)
+	if data == false {
+		t.Error("positive equality did not work")
+	}
+	data, _ = Walk(context.Background(), "foo.bar.eq(22)", map[string]map[string]any{"foo": {"bar": true}}, nil)
+	if data == true {
+		t.Error("negative equality did not work")
+	}
+	data, _ = Walk(context.Background(), "foo.eq(22)", map[string]map[string]any{"foo": {"bar": true}}, nil)
+	if data == true {
+		t.Error("negative equality did not work")
+	}
+}

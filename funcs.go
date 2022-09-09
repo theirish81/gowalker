@@ -32,6 +32,7 @@ func NewFunctions() *Functions {
 	fx.Add("toVar", fx.toVar)
 	fx.Add("jsonEscape", fx.jsonEscape)
 	fx.Add("toString", fx.toString)
+	fx.Add("eq", fx.eq)
 	return &fx
 }
 
@@ -215,8 +216,21 @@ func (f *Functions) collect(_ context.Context, scope any, params ...string) (any
 	}
 }
 
+// toString will convert the provided scope to a string
 func (f *Functions) toString(_ context.Context, scope any, _ ...string) (any, error) {
-	return convertData(scope), nil
+	return convertDataToString(scope), nil
+}
+
+// eq will compare the provided scope with the provided param
+func (f *Functions) eq(_ context.Context, scope any, params ...string) (any, error) {
+	if len(params) < 1 {
+		return nil, errors.New("equality parameter not provided")
+	}
+	if comp, err := convertStringToSameType(scope, params[0]); err == nil {
+		return scope == comp, nil
+	} else {
+		return false, err
+	}
 }
 
 // GetScope returns the scope of the functions. When implementing new functions outside the Functions structure, you
