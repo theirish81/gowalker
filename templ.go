@@ -57,9 +57,14 @@ func RenderAll(ctx context.Context, template string, subTemplates SubTemplates, 
 
 // convertData converts the provided data into a string for the template
 func convertData(data any) string {
+	if data == nil {
+		return "null"
+	}
 	switch reflect.TypeOf(data).Kind() {
-	case reflect.Int:
+	case reflect.Int, reflect.Int64:
 		return fmt.Sprintf("%d", data)
+	case reflect.Float32:
+		return strconv.FormatFloat(float64(data.(float32)), 'f', -1, 64)
 	case reflect.Float64:
 		return strconv.FormatFloat(data.(float64), 'f', -1, 64)
 	case reflect.Bool:

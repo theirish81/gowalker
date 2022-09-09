@@ -7,6 +7,25 @@ import (
 	"time"
 )
 
+func TestConvertData(t *testing.T) {
+	var i int = 22
+	if convertData(i) != "22" {
+		t.Error("could not convert int")
+	}
+	var i64 int64 = 22
+	if convertData(i64) != "22" {
+		t.Error("could not convert int64")
+	}
+	var f32 float32 = 22.5
+	if convertData(f32) != "22.5" {
+		t.Error("could not convert float32")
+	}
+	if convertData(nil) != "null" {
+		t.Error("could not convert nil value")
+	}
+
+}
+
 func TestRender(t *testing.T) {
 	ctx := context.Background()
 	data := map[string]any{"name": "pino", "age": 22}
