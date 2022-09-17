@@ -26,6 +26,9 @@ func convertDataToString(data any) string {
 		// Slices and maps are rendered as JSON
 		d, _ := json.Marshal(data)
 		return string(d)
+	case reflect.Pointer:
+		t := reflect.ValueOf(data).Elem().Interface()
+		return convertDataToString(t)
 	}
 	return data.(string)
 }
