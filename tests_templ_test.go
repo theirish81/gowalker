@@ -164,3 +164,13 @@ func TestRenderAllRenderEachWithMap(t *testing.T) {
 		t.Error("cannot iterate maps")
 	}
 }
+
+func TestRenderAgainstStructPointer(t *testing.T) {
+	type Foo struct {
+		Data string
+	}
+	ctx := context.Background()
+	if res, _ := Render(ctx, "${.}", &Foo{Data: "yay"}, nil); res != "{\"Data\":\"yay\"}" {
+		t.Error("could not render ${.} against struct pointer")
+	}
+}
