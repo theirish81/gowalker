@@ -2,6 +2,7 @@ package gowalker
 
 import (
 	"math"
+	"os"
 	"testing"
 )
 
@@ -41,5 +42,25 @@ func TestConvertStringToSameType(t *testing.T) {
 	}
 	if res, _ := convertStringToSameType(nil, "bananas"); res != "bananas" {
 		t.Error("could not convert nil value")
+	}
+}
+
+func TestLoadTemplatesFromDisk(t *testing.T) {
+	_ = os.Mkdir("test_data", os.ModePerm)
+	_ = os.WriteFile("test_data/templ1.templ", []byte("foobar1"), os.ModePerm)
+	_ = os.WriteFile("test_data/templ2.templ", []byte("foobar2"), os.ModePerm)
+	_ = os.WriteFile("test_data/templ3.templ", []byte("foobar3"), os.ModePerm)
+	defer func() {
+		_ = os.RemoveAll("test_data")
+	}()
+	t1, subs, _ := LoadTemplatesFromDisk("test_data/templ1.templ")
+	if t1 != "foobar1" {
+		t.Error("could not load main template")
+	}
+	if subs["templ2"] != "foobar2" {
+		t.Error("could not load sub template")
+	}
+	if subs["templ3"] != "foobar3" {
+		t.Error("could not load sub template")
 	}
 }

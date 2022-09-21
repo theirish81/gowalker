@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // convertDataToString converts the provided data into a string for the template
@@ -50,4 +54,28 @@ func convertStringToSameType(sample any, val string) (any, error) {
 	default:
 		return val, nil
 	}
+}
+
+func LoadTemplatesFromDisk(filePath string) (string, SubTemplates, error) {
+	data, err := os.ReadFile(filePath)
+	template := string(data)
+	if err != nil {
+		return "", nil, err
+	}
+
+	templDir := path.Dir(filePath)
+	subTemplates := NewSubTemplates()
+	files, err := os.ReadDir(templDir)
+	if err != nil {
+		return "", nil, err
+	}
+	rootTemplateName := filepath.Base(filePath)
+	for _, file := range files {
+		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && file.Name() != rootTemplateName {
+			data, _ = os.ReadFile(path.Join(templDir, file.Name()))
+			subTemplateName := file.Name()[0:strings.LastIndex(file.Name(), ".")]
+			subTemplates[subTemplateName] = string(data)
+		}
+	}
+	return template, subTemplates, nil
 }
