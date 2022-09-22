@@ -109,7 +109,7 @@ func (f *Functions) toVar(ctx context.Context, _ any, params ...string) (any, er
 // separator string to append at each iteration.
 func (f *Functions) renderEach(ctx context.Context, scope any, params ...string) (any, error) {
 	// if there are no params, it's an error
-	if len(params) < 1 {
+	if len(params) < 1 || len(params[0]) == 0 {
 		return nil, errors.New("template not provided")
 	}
 	// if it has two params, we have a separator string
@@ -119,6 +119,9 @@ func (f *Functions) renderEach(ctx context.Context, scope any, params ...string)
 	}
 	// if the sub-template exists
 	if templ, ok := f.functionScope["_"+params[0]]; ok {
+		if scope == nil {
+			return nil, errors.New("cannot renderEach against nil")
+		}
 		// and the scope is a slice
 		switch reflect.TypeOf(scope).Kind() {
 		case reflect.Slice:
@@ -175,7 +178,7 @@ func (f *Functions) renderEach(ctx context.Context, scope any, params ...string)
 // The function will produce a derivative array of objects containing only the fields expressed in params
 func (f *Functions) collect(_ context.Context, scope any, params ...string) (any, error) {
 	// if no params are passed, then we return an error
-	if len(params) < 1 {
+	if len(params) < 1 || len(params[0]) == 0 {
 		return nil, errors.New("list of fields not provided")
 	}
 	kind := reflect.TypeOf(scope).Kind()

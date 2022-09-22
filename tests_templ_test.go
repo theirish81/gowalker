@@ -151,6 +151,13 @@ func TestRenderAllRenderEach(t *testing.T) {
 	if _, err := RenderAll(ctx, "${items.renderEach(t2)}", templates, map[string]any{"items": "foo"}, NewFunctions()); err == nil {
 		t.Error("not returning an error when renderEach is not applied to a slice")
 	}
+
+	if _, err := RenderAll(ctx, "this is a test ${items.renderEach()}", templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); err == nil {
+		t.Error("absence of template should cause an error")
+	}
+	if _, err := RenderAll(ctx, "${foo.renderEach(t2)}", templates, map[string]any{"items": []string{"foo", "bar"}}, NewFunctions()); err == nil {
+		t.Error("absence of template should cause an error")
+	}
 }
 
 func TestRenderAllRenderEachWithMap(t *testing.T) {
