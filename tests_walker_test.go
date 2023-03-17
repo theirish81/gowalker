@@ -3,7 +3,6 @@ package gowalker
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -48,12 +47,21 @@ func TestWalk(t *testing.T) {
 		t.Error("empty selector not working")
 	}
 	if res, _ := Walk(ctx, ".foo", map[string]string{"foo": "bar"}, nil); res != "bar" {
-		fmt.Println(res)
 		t.Error("selector starting with dot does not work")
 	}
 	if res, _ := Walk(ctx, "foo.", map[string]string{"foo": "bar"}, nil); res != "bar" {
-		fmt.Println(res)
-		t.Error("selector starting with dot does not work")
+		t.Error("selector ending with dot does not work")
+	}
+
+	if res, _ := Walk(ctx, ".[1]", []string{"foo", "bar"}, nil); res != "bar" {
+		t.Error("selector on a root array doesn't work")
+	}
+	if res, _ := Walk(ctx, ".[0].foo", []any{map[string]string{"foo": "bar"}}, nil); res != "bar" {
+		t.Error("selector on a root array with further object selection doesn't work")
+	}
+
+	if res, _ := Walk(ctx, ".[0][0]", []any{[]any{"bar"}}, nil); res != "bar" {
+		t.Error("selector on a root array with further array selection doesn't work")
 	}
 }
 
