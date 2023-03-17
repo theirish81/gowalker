@@ -86,9 +86,9 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 	// if it's a slice...
 	case reflect.Slice:
 		t := reflect.ValueOf(data)
-		if indexes == nil && strings.HasPrefix(expr, ".[") {
+		if indexes == nil && strings.HasPrefix(expr, "[") {
 			_, indexes = extractIndexes(expr)
-			_, expr = getSegments(expr[1:])
+			_, expr = getSegments(expr)
 		}
 		// if there's one or more index selectors
 		if indexes != nil || len(indexes) > 0 {
