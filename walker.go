@@ -160,6 +160,10 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 		} else {
 			if found {
 				return walkImpl(ctx, next, res, indexes, functions)
+			} else {
+				if len(current) > 0 {
+					return nil, nil
+				}
 			}
 		}
 		// otherwise, we just return the value
