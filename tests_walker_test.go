@@ -63,6 +63,10 @@ func TestWalk(t *testing.T) {
 	if res, _ := Walk(ctx, "[0][0]", []any{[]any{"bar"}}, nil); res != "bar" {
 		t.Error("selector on a root array with further array selection doesn't work")
 	}
+
+	if res, _ := Walk(ctx, "foo.bar", map[string]any{"foo": "1"}, nil); res != nil {
+		t.Error("value not found does not return nil")
+	}
 }
 
 func TestWalkWithNestedTypes(t *testing.T) {
