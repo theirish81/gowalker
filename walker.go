@@ -161,6 +161,8 @@ func walkImpl(ctx context.Context, expr string, data any, indexes []int, functio
 			if found {
 				return walkImpl(ctx, next, res, indexes, functions)
 			} else {
+				// if we're still trying to access a resource on a base type, then we're looking for something
+				// that does not exist, so it's nil
 				if len(current) > 0 {
 					return nil, nil
 				}
