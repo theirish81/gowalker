@@ -46,6 +46,10 @@ func TestRender(t *testing.T) {
 	if res, _ := Render(ctx, "${foo}", map[string]any{"bar": "bar"}, nil); res != "${foo}" {
 		t.Error("something went wrong while rendering a template referencing a missing variable")
 	}
+
+	if res, _ := Render(ctx, "${foo.bar}", map[string]any{"foo": 1}, nil); res != "${foo.bar}" {
+		t.Error("does not return template itself on nil value")
+	}
 }
 
 func TestRenderWithFunctions(t *testing.T) {
